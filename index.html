@@ -479,7 +479,11 @@ mark.hl{
 .cAct{width:146px;text-align:center !important}
 
 .cellMuted{color:var(--muted);font-style:italic}
-.dragHandle{cursor:grab;color:var(--muted);margin-right:6px;user-select:none;font-size:13px}
+.dragHandle{cursor:grab;color:var(--muted);margin-right:6px;user-select:none;font-size:13px;touch-action:none;padding:2px 4px}
+.cTable tbody tr.dragging{opacity:.45}
+.cTable tbody tr.dropBefore td{box-shadow:inset 0 2px 0 var(--accent)}
+.cTable tbody tr.dropAfter td{box-shadow:inset 0 -2px 0 var(--accent)}
+body.isDragging,body.isDragging *{cursor:grabbing !important;user-select:none !important}
 .miniBtn{padding:3px 7px;font-size:11px;border-radius:6px;margin:0 1.5px}
 .rmBtn{
   padding:3px 9px;
@@ -574,7 +578,6 @@ mark.hl{
 }
 .plusFilterBar select option{background:#1c1e26;color:#f5f5f7}
 .plusFilterBar select{min-width:120px}
-.plusFilterBar select[multiple]{min-width:140px;min-height:72px;padding:4px}
 .plusFilterBar input[type=number]{width:110px}
 .plusFilterBar select:focus,.plusFilterBar input:focus{
   outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(41,151,255,.22);
@@ -626,6 +629,7 @@ mark.hl{
       <div class="body" id="body"></div>
     </div>
     <div class="loadPrompt" id="loadPrompt">Could not load <b>1.csv</b> automatically. <button id="pick" type="button">Choose 1.csv</button></div>
+    <div class="loadPrompt" id="pwPrompt">Enter password to unlock data <input class="mq" id="pwInput" type="password" autocomplete="current-password" style="width:180px;margin:0"> <button id="pwBtn" type="button">Unlock</button> <span id="pwErr" style="color:var(--danger-text)"></span></div>
   </div>
 </div>
 
@@ -693,7 +697,7 @@ mark.hl{
       <input id="plusMinStipend" type="number" min="0" step="1000" placeholder="e.g. 50000" title="Show only institutes with stipend greater than this amount">
     </label>
     <label>Bond
-      <select id="plusBondFilter" multiple size="4" title="Click to select. Hold Ctrl (Windows) or Cmd (Mac) to select multiple. Empty selection = all bonds."></select>
+      <select id="plusBondFilter"><option value="">All bonds</option></select>
     </label>
     <label>Penalty
       <select id="plusPenaltyFilter"><option value="">All penalties</option></select>
@@ -758,7 +762,7 @@ mark.hl{
   <input class="mq" id="mq" type="search" placeholder="Search values…" autocomplete="off">
   <div class="mall" id="mall"><input type="checkbox" id="mallcb"><span id="malltxt">(Select all)</span></div>
   <div class="mlist" id="mlist"><div id="mspacer"></div></div>
-  <div class="mfoot"><span id="mcount"></span><button id="mclear" type="button">Clear</button></div>
+  <div class="mfoot"><span id="mcount"></span><span><button id="mclearall" type="button" title="Deselect every course so you can search and pick fresh">Clear All</button> <button id="mclear" type="button">Clear</button></span></div>
 </div>
 
 <button type="button" class="backToInstBtn" id="backToInstBtn" title="Return to the institute you were matching">↑ Back to Institute</button>
@@ -2490,6 +2494,26 @@ function addChoiceFromRow(rowIdx){
   syncUI();
 }
 
+function addAllVisible(){
+  if(!view.length){ return; }
+  var toAdd=[];
+  for(var v=0;v<view.length;v++){
+    var r=data[view[v]];
+    var key=makeChoiceKey(r[1],r[2],r[3]);
+    if(choiceKeySet.has(key)) continue;
+    toAdd.push({key:key,rank:r[0],quota:r[1],institute:r[2],course:r[3]});
+    choiceKeySet.add(key);
+  }
+  if(!toAdd.length){ alert("All shown rows are already in your Choices."); return; }
+  if(toAdd.length>200 && !confirm("Add "+toAdd.length+" rows to your Choices?")){
+    toAdd.forEach(function(c){choiceKeySet.delete(c.key);});
+    return;
+  }
+  for(var i=0;i<toAdd.length;i++) choices.push(toAdd[i]);
+  saveChoices();
+  syncUI();
+}
+
 function removeChoiceAt(idx){
   if(idx<0||idx>=choices.length) return;
   choices.splice(idx,1);
@@ -2680,26 +2704,76 @@ function loadFile2(f){
   rd.readAsText(f,"utf-8");
 }
 
+/* ---- Data loading: plain CSV (local use) or password-encrypted CSV (public GitHub Pages) ---- */
+function getRes(url,type){
+  return new Promise(function(resolve,reject){
+    var x=new XMLHttpRequest();
+    x.open("GET",url,true);
+    x.responseType=type;
+    x.onload=function(){
+      var ok=(x.status===0||(x.status>=200&&x.status<300));
+      var r=x.response;
+      if(ok&&r&&(r.byteLength||r.length)) resolve(r); else reject(new Error("HTTP "+x.status));
+    };
+    x.onerror=function(){reject(new Error("network"));};
+    try{x.send();}catch(e){reject(e);}
+  });
+}
+// File format: "NPG1" | salt(16) | iv(12) | AES-256-GCM ciphertext+tag ; key = PBKDF2-SHA256(password, salt, 250000)
+function decryptCsv(buf,password){
+  var u=new Uint8Array(buf);
+  if(u.length<33||!window.crypto||!crypto.subtle) return Promise.reject(new Error("unsupported"));
+  var salt=u.slice(4,20), iv=u.slice(20,32), ct=u.slice(32);
+  return crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveKey"])
+    .then(function(k){
+      return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:250000,hash:"SHA-256"},k,{name:"AES-GCM",length:256},false,["decrypt"]);
+    })
+    .then(function(key){return crypto.subtle.decrypt({name:"AES-GCM",iv:iv},key,ct);})
+    .then(function(plain){return new TextDecoder("utf-8").decode(plain);});
+}
 function autoLoad(){
   function fail(){$("loadPrompt").classList.add("show");}
-  if(location.protocol==="file:"){
-    try{
-      var x=new XMLHttpRequest();
-      x.open("GET","1.csv",true);
-      x.onload=function(){ if(x.responseText&&x.responseText.length) load1CsvText(x.responseText); else fail(); };
-      x.onerror=fail;
-      x.send();
-    }catch(e){fail();}
-    try{
-      var x2=new XMLHttpRequest();
-      x2.open("GET","2.csv",true);
-      x2.onload=function(){ if(x2.responseText&&x2.responseText.length) load2CsvText(x2.responseText); };
-      x2.send();
-    }catch(e){}
-    return;
+  function loadOne(name){
+    return getRes(name,"text").then(function(t){return {text:t};}).catch(function(){
+      return getRes(name+".enc","arraybuffer").then(function(b){return {buf:b};}).catch(function(){return null;});
+    });
   }
-  fetch("1.csv").then(function(r){if(!r.ok)throw 0;return r.text();}).then(load1CsvText).catch(fail);
-  fetch("2.csv").then(function(r){if(r.ok)return r.text();}).then(function(txt){if(txt)load2CsvText(txt);}).catch(function(){});
+  Promise.all([loadOne("1.csv"),loadOne("2.csv")]).then(function(r){
+    var items=[{res:r[0],apply:load1CsvText},{res:r[1],apply:load2CsvText}];
+    if(!items[0].res) fail();
+    var encrypted=[];
+    items.forEach(function(it){
+      if(!it.res) return;
+      if(it.res.text) it.apply(it.res.text); else encrypted.push(it);
+    });
+    if(!encrypted.length) return;
+    function tryPassword(pw){
+      return Promise.all(encrypted.map(function(it){return decryptCsv(it.res.buf,pw);})).then(function(texts){
+        try{sessionStorage.setItem("neet_pg_unlock",pw);}catch(e){}
+        $("pwPrompt").classList.remove("show");
+        encrypted.forEach(function(it,i){it.apply(texts[i]);});
+      });
+    }
+    function askPassword(msg){
+      var box=$("pwPrompt"), inp=$("pwInput");
+      $("pwErr").textContent=msg||"";
+      box.classList.add("show");
+      inp.focus();
+    }
+    var saved=null;
+    try{saved=sessionStorage.getItem("neet_pg_unlock");}catch(e){}
+    if(saved){
+      tryPassword(saved).catch(function(){ try{sessionStorage.removeItem("neet_pg_unlock");}catch(e){} askPassword(""); });
+    } else askPassword("");
+    function submit(){
+      var pw=$("pwInput").value;
+      if(!pw) return;
+      $("pwErr").textContent="Unlocking…";
+      tryPassword(pw).catch(function(){ $("pwErr").textContent="Wrong password"; $("pwInput").select(); });
+    }
+    $("pwBtn").onclick=submit;
+    $("pwInput").onkeydown=function(e){ if(e.key==="Enter") submit(); };
+  });
 }
 
 /* ---------- Robust India-wide Institute Matching Engine ---------- */
@@ -3110,6 +3184,11 @@ function buildHeader(){
 
   var actF=document.createElement("div");
   actF.className="fcell";
+  var addAll=document.createElement("button");
+  addAll.type="button";addAll.className="addBtn";addAll.id="addAllBtn";addAll.textContent="Add All";
+  addAll.title="Add every institute currently shown (after filters) to Choices";
+  addAll.addEventListener("click",addAllVisible);
+  actF.appendChild(addAll);
   filtersEl.appendChild(actF);
 
   updateArrows();
@@ -3238,6 +3317,75 @@ function renderChoices(){
   }
   tbody.innerHTML=html.join("");
 }
+
+(function bindChoiceDrag(){
+  var tb=$("choicesBody"), scroller=tb.closest(".cWrap");
+  var st=null;
+  function rows(){return tb.querySelectorAll("tr[data-i]");}
+  function clearMarks(){
+    var rs=rows();
+    for(var i=0;i<rs.length;i++) rs[i].classList.remove("dropBefore","dropAfter","dragging");
+  }
+  function insertPos(y){
+    var rs=rows(), p=rs.length;
+    for(var i=0;i<rs.length;i++){
+      var b=rs[i].getBoundingClientRect();
+      if(y<b.top+b.height/2){ p=i; break; }
+    }
+    return p;
+  }
+  function mark(p){
+    var rs=rows();
+    for(var i=0;i<rs.length;i++) rs[i].classList.remove("dropBefore","dropAfter");
+    if(p<rs.length) rs[p].classList.add("dropBefore"); else if(rs.length) rs[rs.length-1].classList.add("dropAfter");
+  }
+  function autoScroll(){
+    if(!st) return;
+    var b=scroller.getBoundingClientRect(), y=st.y, v=0, edge=48;
+    if(y<b.top+edge) v=-Math.ceil((b.top+edge-y)/4);
+    else if(y>b.bottom-edge) v=Math.ceil((y-(b.bottom-edge))/4);
+    if(v){ scroller.scrollTop+=v; st.pos=insertPos(y); mark(st.pos); }
+    st.raf=requestAnimationFrame(autoScroll);
+  }
+  function end(e,cancel){
+    if(!st) return;
+    cancelAnimationFrame(st.raf);
+    var from=st.from, pos=st.pos;
+    try{ st.handle.releasePointerCapture(st.id); }catch(x){}
+    st.handle.removeEventListener("pointermove",onMove);
+    st.handle.removeEventListener("pointerup",onUp);
+    st.handle.removeEventListener("pointercancel",onCancel);
+    document.body.classList.remove("isDragging");
+    clearMarks();
+    st=null;
+    if(cancel) return;
+    var to=pos>from?pos-1:pos;
+    if(to!==from) moveChoice(from,to);
+  }
+  function onMove(e){
+    if(!st) return;
+    st.y=e.clientY;
+    st.pos=insertPos(e.clientY);
+    mark(st.pos);
+  }
+  function onUp(e){ end(e,false); }
+  function onCancel(e){ end(e,true); }
+  tb.addEventListener("pointerdown",function(e){
+    var h=e.target.closest(".dragHandle");
+    if(!h || (e.pointerType==="mouse" && e.button!==0)) return;
+    var tr=h.closest("tr[data-i]");
+    if(!tr) return;
+    e.preventDefault();
+    st={from:parseInt(tr.dataset.i,10),pos:parseInt(tr.dataset.i,10),y:e.clientY,handle:h,id:e.pointerId,raf:0};
+    try{ h.setPointerCapture(e.pointerId); }catch(x){}
+    h.addEventListener("pointermove",onMove);
+    h.addEventListener("pointerup",onUp);
+    h.addEventListener("pointercancel",onCancel);
+    tr.classList.add("dragging");
+    document.body.classList.add("isDragging");
+    st.raf=requestAnimationFrame(autoScroll);
+  });
+})();
 
 $("choicesBody").addEventListener("click",function(e){
   var up=e.target.closest(".moveUpBtn");
@@ -3452,19 +3600,13 @@ function refreshPlusFilterOptions(){
   var nextBondKey=bondList.join("\u0001");
   if(bondSel.getAttribute("data-opts")!==nextBondKey){
     bondSel.setAttribute("data-opts", nextBondKey);
-    if(!bondList.length){
-      bondSel.innerHTML='<option value="" disabled>No bonds</option>';
-    } else {
-      bondSel.innerHTML=bondList.map(function(v){
-        return '<option value="'+esc(v)+'">'+esc(v)+'</option>';
-      }).join("");
-    }
+    bondSel.innerHTML='<option value="">All bonds</option>'+bondList.map(function(v){
+      return '<option value="'+esc(v)+'">'+esc(v)+'</option>';
+    }).join("");
   }
-  // Always re-apply selected state so filtering stays accurate
-  for(var bi=0; bi<bondSel.options.length; bi++){
-    var opt=bondSel.options[bi];
-    opt.selected = curB.indexOf(opt.value)>=0;
-  }
+  // Always re-apply selected value so filtering stays accurate
+  bondSel.value = curB.length ? curB[0] : "";
+  if(bondSel.value!==(curB.length?curB[0]:"")) plusBondVal=[];
 
   var curP=plusPenaltyVal;
   var nextPenKey=penList.join("\u0001");
@@ -3781,6 +3923,7 @@ function openMenu(c,anchor){
   if(sel[c]) sel[c].forEach(function(v){st.add(v);});
   mVals=uniq[c].filter(function(v){return st.has(v);});
   mq.value="";filterMenu();
+  $("mclearall").style.display=(c===3)?"":"none";
   menu.classList.add("open");
   var r=anchor.getBoundingClientRect(), w=menu.offsetWidth, h=menu.offsetHeight;
   menu.style.left=Math.max(4,Math.min(r.right-w,innerWidth-w-4))+"px";
@@ -3827,6 +3970,12 @@ $("mall").addEventListener("click",function(e){
   setSel(mCol,s);
 });
 $("mclear").addEventListener("click",function(){ if(mCol<0)return; sel[mCol]=null;applyAll();renderMenu(); });
+$("mclearall").addEventListener("click",function(){
+  if(mCol<0)return;
+  sel[mCol]=new Set();           // nothing selected: start a fresh search/pick
+  mq.value="";filterMenu();
+  applyAll();renderMenu();mq.focus();
+});
 document.addEventListener("mousedown",function(e){ if(menu.classList.contains("open")&&!menu.contains(e.target)&&!e.target.classList.contains("dd"))closeMenu(); });
 document.addEventListener("keydown",function(e){ if(e.key==="Escape")closeMenu(); });
 wrap.addEventListener("scroll",closeMenu);
@@ -3864,16 +4013,10 @@ function clearAll(){
     });
   }
   if(bondEl){
-    function readBondSelection(){
-      var selected=[];
-      for(var i=0;i<bondEl.options.length;i++){
-        if(bondEl.options[i].selected && bondEl.options[i].value!=="") selected.push(String(bondEl.options[i].value));
-      }
-      plusBondVal=selected;
+    bondEl.addEventListener("change", function(){
+      plusBondVal = bondEl.value!=="" ? [String(bondEl.value)] : [];
       applyPlusTableFilters();
-    }
-    bondEl.addEventListener("change", readBondSelection);
-    bondEl.addEventListener("input", readBondSelection);
+    });
   }
   if(penEl){
     penEl.addEventListener("change", function(){
