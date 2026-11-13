@@ -629,7 +629,6 @@ body.isDragging,body.isDragging *{cursor:grabbing !important;user-select:none !i
       <div class="body" id="body"></div>
     </div>
     <div class="loadPrompt" id="loadPrompt">Could not load <b>1.csv</b> automatically. <button id="pick" type="button">Choose 1.csv</button></div>
-    <div class="loadPrompt" id="pwPrompt">Enter password to unlock data <input class="mq" id="pwInput" type="password" autocomplete="current-password" style="width:180px;margin:0"> <button id="pwBtn" type="button">Unlock</button> <span id="pwErr" style="color:var(--danger-text)"></span></div>
   </div>
 </div>
 
@@ -2704,76 +2703,26 @@ function loadFile2(f){
   rd.readAsText(f,"utf-8");
 }
 
-/* ---- Data loading: plain CSV (local use) or password-encrypted CSV (public GitHub Pages) ---- */
-function getRes(url,type){
-  return new Promise(function(resolve,reject){
-    var x=new XMLHttpRequest();
-    x.open("GET",url,true);
-    x.responseType=type;
-    x.onload=function(){
-      var ok=(x.status===0||(x.status>=200&&x.status<300));
-      var r=x.response;
-      if(ok&&r&&(r.byteLength||r.length)) resolve(r); else reject(new Error("HTTP "+x.status));
-    };
-    x.onerror=function(){reject(new Error("network"));};
-    try{x.send();}catch(e){reject(e);}
-  });
-}
-// File format: "NPG1" | salt(16) | iv(12) | AES-256-GCM ciphertext+tag ; key = PBKDF2-SHA256(password, salt, 250000)
-function decryptCsv(buf,password){
-  var u=new Uint8Array(buf);
-  if(u.length<33||!window.crypto||!crypto.subtle) return Promise.reject(new Error("unsupported"));
-  var salt=u.slice(4,20), iv=u.slice(20,32), ct=u.slice(32);
-  return crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveKey"])
-    .then(function(k){
-      return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:250000,hash:"SHA-256"},k,{name:"AES-GCM",length:256},false,["decrypt"]);
-    })
-    .then(function(key){return crypto.subtle.decrypt({name:"AES-GCM",iv:iv},key,ct);})
-    .then(function(plain){return new TextDecoder("utf-8").decode(plain);});
-}
 function autoLoad(){
   function fail(){$("loadPrompt").classList.add("show");}
-  function loadOne(name){
-    return getRes(name,"text").then(function(t){return {text:t};}).catch(function(){
-      return getRes(name+".enc","arraybuffer").then(function(b){return {buf:b};}).catch(function(){return null;});
-    });
+  if(location.protocol==="file:"){
+    try{
+      var x=new XMLHttpRequest();
+      x.open("GET","1.csv",true);
+      x.onload=function(){ if(x.responseText&&x.responseText.length) load1CsvText(x.responseText); else fail(); };
+      x.onerror=fail;
+      x.send();
+    }catch(e){fail();}
+    try{
+      var x2=new XMLHttpRequest();
+      x2.open("GET","2.csv",true);
+      x2.onload=function(){ if(x2.responseText&&x2.responseText.length) load2CsvText(x2.responseText); };
+      x2.send();
+    }catch(e){}
+    return;
   }
-  Promise.all([loadOne("1.csv"),loadOne("2.csv")]).then(function(r){
-    var items=[{res:r[0],apply:load1CsvText},{res:r[1],apply:load2CsvText}];
-    if(!items[0].res) fail();
-    var encrypted=[];
-    items.forEach(function(it){
-      if(!it.res) return;
-      if(it.res.text) it.apply(it.res.text); else encrypted.push(it);
-    });
-    if(!encrypted.length) return;
-    function tryPassword(pw){
-      return Promise.all(encrypted.map(function(it){return decryptCsv(it.res.buf,pw);})).then(function(texts){
-        try{sessionStorage.setItem("neet_pg_unlock",pw);}catch(e){}
-        $("pwPrompt").classList.remove("show");
-        encrypted.forEach(function(it,i){it.apply(texts[i]);});
-      });
-    }
-    function askPassword(msg){
-      var box=$("pwPrompt"), inp=$("pwInput");
-      $("pwErr").textContent=msg||"";
-      box.classList.add("show");
-      inp.focus();
-    }
-    var saved=null;
-    try{saved=sessionStorage.getItem("neet_pg_unlock");}catch(e){}
-    if(saved){
-      tryPassword(saved).catch(function(){ try{sessionStorage.removeItem("neet_pg_unlock");}catch(e){} askPassword(""); });
-    } else askPassword("");
-    function submit(){
-      var pw=$("pwInput").value;
-      if(!pw) return;
-      $("pwErr").textContent="Unlocking…";
-      tryPassword(pw).catch(function(){ $("pwErr").textContent="Wrong password"; $("pwInput").select(); });
-    }
-    $("pwBtn").onclick=submit;
-    $("pwInput").onkeydown=function(e){ if(e.key==="Enter") submit(); };
-  });
+  fetch("1.csv").then(function(r){if(!r.ok)throw 0;return r.text();}).then(load1CsvText).catch(fail);
+  fetch("2.csv").then(function(r){if(r.ok)return r.text();}).then(function(txt){if(txt)load2CsvText(txt);}).catch(function(){});
 }
 
 /* ---------- Robust India-wide Institute Matching Engine ---------- */
