@@ -1,0 +1,3901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEET PG Counselling Dashboard</title>
+<style>
+:root{
+  --bg:#000000;
+  --bg-elev:#0c0d10;
+  --panel:#121318;
+  --panel-2:#181a20;
+  --glass:rgba(22,24,30,.78);
+  --line:rgba(255,255,255,.10);
+  --line2:rgba(255,255,255,.06);
+  --text:#f5f5f7;
+  --muted:#86868b;
+  --head:rgba(24,25,31,.92);
+  --head-text:#f5f5f7;
+  --accent:#2997ff;
+  --accent-soft:rgba(41,151,255,.16);
+  --hl-bg:rgba(255,214,10,.22);
+  --hl-text:#ffd60a;
+  --row-alt:rgba(255,255,255,.018);
+  --row-hover:rgba(41,151,255,.10);
+  --added-bg:rgba(48,209,88,.15);
+  --added-text:#30d158;
+  --added-border:rgba(48,209,88,.38);
+  --danger-bg:rgba(255,69,58,.15);
+  --danger-text:#ff453a;
+  --danger-border:rgba(255,69,58,.38);
+  --shadow:0 20px 50px rgba(0,0,0,.65);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:radial-gradient(1200px 600px at 50% -180px,#181c28 0%,#08090c 52%,#000000 100%);
+  color:var(--text);
+  font:13px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  letter-spacing:-0.01em;
+  display:flex;
+  flex-direction:column;
+}
+
+.filters input:focus,.mq:focus{
+  outline:none;
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px rgba(41,151,255,.22);
+}
+
+button{
+  font:inherit;
+  padding:6px 12px;
+  border:1px solid var(--line);
+  border-radius:980px;
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,color .18s ease,transform .12s ease,box-shadow .18s ease;
+}
+button:hover:not(:disabled){
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.22);
+}
+button:active:not(:disabled){transform:scale(.98)}
+button:disabled{opacity:.38;cursor:not-allowed}
+.fileInputHidden{display:none}
+
+/* Cinematic Glass Navigation Bar */
+.tabs{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 18px;
+  background:var(--glass);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+  z-index:10;
+}
+.tab{
+  padding:6px 16px;
+  border:1px solid transparent;
+  border-radius:980px;
+  background:transparent;
+  color:var(--muted);
+  font-weight:600;
+  font-size:13px;
+  letter-spacing:-0.01em;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+}
+.tab:hover{
+  color:var(--text);
+  background:rgba(255,255,255,.06);
+  border-color:transparent;
+}
+.tab.active{
+  background:var(--text);
+  color:#000000;
+  border-color:var(--text);
+  box-shadow:0 4px 16px rgba(255,255,255,.14);
+}
+.badge{
+  display:inline-block;
+  padding:1px 7px;
+  font-size:11px;
+  line-height:16px;
+  border-radius:980px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+}
+.tab.active .badge{
+  background:#000000;
+  color:#ffffff;
+}
+.tabRight{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  font-size:12px;
+  color:var(--muted);
+  font-variant-numeric:tabular-nums;
+}
+.uploadTriggerBtn{
+  padding:4px 12px;
+  font-size:11.5px;
+  border-radius:980px;
+  background:rgba(41,151,255,.15);
+  border-color:rgba(41,151,255,.35);
+  color:var(--accent);
+  font-weight:600;
+}
+.uploadTriggerBtn:hover{
+  background:var(--accent);
+  color:#fff;
+}
+
+/* Page containers */
+.page{flex:1;min-height:0;display:none;flex-direction:column}
+.page.active{display:flex}
+
+.loadPrompt{
+  display:none;
+  position:absolute;
+  z-index:8;
+  top:64px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:12px 18px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+  color:var(--text);
+  white-space:nowrap;
+}
+.loadPrompt.show{display:flex;align-items:center;gap:12px}
+
+.clearBtn{
+  padding:5px 10px;
+  font-size:11.5px;
+  font-weight:500;
+  border-radius:8px;
+  white-space:nowrap;
+}
+
+.wrap{
+  flex:1;
+  min-height:0;
+  background:transparent;
+  overflow:auto;
+  position:relative;
+}
+.grid{
+  min-width:980px;
+  background:var(--panel);
+}
+.cols{
+  display:grid;
+  grid-template-columns:88px 120px minmax(360px,2.2fr) minmax(240px,1.4fr) 88px;
+}
+.hdr{
+  position:sticky;
+  top:0;
+  z-index:3;
+  background:var(--head);
+  backdrop-filter:blur(20px) saturate(160%);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);
+}
+.hcell{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:6px;
+  padding:10px 12px;
+  font-weight:600;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  color:var(--muted);
+  border-right:1px solid var(--line2);
+  border-bottom:1px solid var(--line);
+  cursor:pointer;
+  user-select:none;
+}
+.hcell.noSort{cursor:default;justify-content:center}
+.hcell:not(.noSort):hover{
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+}
+.hcell .arrow{font-size:10px;color:var(--muted);letter-spacing:-1px;white-space:nowrap;opacity:.75}
+.hcell.sorted .arrow{color:var(--accent);opacity:1}
+.hcell.sorted{
+  background:var(--accent-soft);
+  color:var(--text);
+}
+.filters .fcell{
+  display:flex;
+  gap:6px;
+  padding:7px 8px;
+  border-right:1px solid var(--line2);
+  border-bottom:1px solid var(--line);
+  background:rgba(16,17,22,.94);
+}
+.filters input{
+  flex:1;
+  min-width:0;
+  width:100%;
+  padding:6px 10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  font:inherit;
+  font-size:12.5px;
+}
+.filters input::placeholder{color:var(--muted)}
+
+.body{position:relative}
+.row{
+  position:absolute;
+  left:0;
+  right:0;
+  height:32px;
+}
+.cell{
+  padding:0 12px;
+  line-height:31px;
+  height:32px;
+  border-right:1px solid var(--line2);
+  border-bottom:1px solid var(--line2);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  color:var(--text);
+}
+.row:nth-child(even) .cell{background:var(--row-alt)}
+.row:hover .cell{background:var(--row-hover)}
+.cell.num{
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+  color:#d1d1d6;
+  font-weight:500;
+}
+.cell.act{display:flex;align-items:center;justify-content:center;padding:0 6px}
+
+.addBtn{
+  padding:3px 10px;
+  font-size:11px;
+  font-weight:600;
+  border-radius:980px;
+  line-height:1.35;
+  min-width:64px;
+  text-align:center;
+  border:1px solid rgba(41,151,255,.45);
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+.addBtn:hover:not(:disabled){
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#ffffff;
+}
+.addBtn.added{
+  border-color:var(--added-border);
+  background:var(--added-bg);
+  color:var(--added-text);
+  cursor:default;
+  opacity:1;
+}
+
+mark.hl{
+  background:var(--hl-bg);
+  color:var(--hl-text);
+  font-weight:600;
+  padding:1px 4px;
+  border-radius:4px;
+  border:1px solid rgba(255,214,10,.25);
+}
+.empty{padding:56px 24px;text-align:center;color:var(--muted);font-size:13.5px}
+
+.dd{
+  padding:0 8px;
+  line-height:1;
+  font-size:12px;
+  border-radius:8px;
+}
+.dd.active{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#ffffff;
+}
+
+.menu{
+  position:fixed;
+  z-index:50;
+  width:300px;
+  background:rgba(24,26,32,.94);
+  backdrop-filter:blur(24px) saturate(180%);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  padding:10px;
+  display:none;
+}
+.menu.open{display:block}
+.mq{
+  width:100%;
+  padding:7px 10px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:rgba(255,255,255,.06);
+  color:var(--text);
+  font:inherit;
+  margin-bottom:8px;
+}
+.mall{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 6px;
+  border-bottom:1px solid var(--line);
+  font-weight:600;
+  cursor:pointer;
+  border-radius:6px;
+}
+.mlist{height:230px;overflow:auto;position:relative;margin-top:4px}
+.mitem{
+  position:absolute;
+  left:0;
+  right:0;
+  height:28px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 6px;
+  cursor:pointer;
+  white-space:nowrap;
+  overflow:hidden;
+  border-radius:6px;
+}
+.mitem:hover,.mall:hover{background:rgba(255,255,255,.07)}
+.mitem span{overflow:hidden;text-overflow:ellipsis}
+.mfoot{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:8px;
+  padding-top:8px;
+  margin-top:4px;
+  border-top:1px solid var(--line2);
+  color:var(--muted);
+  font-size:12px;
+}
+.mfoot button{padding:4px 10px;font-size:12px}
+
+/* Page 2 & Page 3: Choices & Choice+ */
+.choicesBar{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 18px;
+  background:rgba(18,19,24,.92);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
+}
+.choicesStats{
+  font-weight:600;
+  color:var(--head-text);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.diagBadge{
+  font-size:11.5px;
+  padding:2px 8px;
+  border-radius:980px;
+  background:rgba(255,255,255,.08);
+  color:var(--muted);
+  font-weight:500;
+}
+.diagBadge.matched{background:var(--added-bg);color:var(--added-text)}
+.diagBadge.unmatched{background:var(--danger-bg);color:var(--danger-text)}
+.diagBadge.ambiguous{background:rgba(255,214,10,.18);color:var(--hl-text)}
+.diagBadge.manual{background:rgba(41,151,255,.18);color:var(--accent)}
+
+.choicesHint{font-weight:400;font-size:12px;color:var(--muted)}
+.choicesActions{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.choicesActions button{padding:5px 13px;font-size:12px;font-weight:500}
+.btnPrimary{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#ffffff;
+  font-weight:600;
+}
+.btnPrimary:hover:not(:disabled){
+  background:#40a3ff;
+  border-color:#40a3ff;
+}
+.btnDanger{
+  border-color:var(--danger-border);
+  background:var(--danger-bg);
+  color:var(--danger-text);
+}
+
+.cWrap{flex:1;min-height:0;overflow:auto;background:var(--panel)}
+.cTable{width:100%;min-width:860px;border-collapse:collapse;table-layout:fixed}
+.cTable.plusTable{min-width:1280px}
+.cTable th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:var(--head);
+  backdrop-filter:blur(16px);
+  color:var(--muted);
+  font-weight:600;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  text-align:left;
+  padding:10px 12px;
+  border-right:1px solid var(--line2);
+  border-bottom:1px solid var(--line);
+}
+.cTable td{
+  padding:5px 12px;
+  border-right:1px solid var(--line2);
+  border-bottom:1px solid var(--line2);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  height:36px;
+}
+.cTable tbody tr:nth-child(even){background:var(--row-alt)}
+.cTable tbody tr:hover{background:var(--row-hover)}
+.cPref{width:82px;text-align:center !important;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
+.cRank{width:88px;text-align:right !important;font-variant-numeric:tabular-nums;color:#d1d1d6}
+.cQuota{width:115px}
+.cInst{width:30%}
+.cCourse{width:20%}
+.cStipend{width:14%}
+.cBond{width:12%}
+.cPenalty{width:14%}
+.cAct{width:146px;text-align:center !important}
+
+.cellMuted{color:var(--muted);font-style:italic}
+.dragHandle{cursor:grab;color:var(--muted);margin-right:6px;user-select:none;font-size:13px}
+.miniBtn{padding:3px 7px;font-size:11px;border-radius:6px;margin:0 1.5px}
+.rmBtn{
+  padding:3px 9px;
+  font-size:11px;
+  border-radius:980px;
+  border-color:var(--danger-border);
+  background:var(--danger-bg);
+  color:var(--danger-text);
+  margin-left:4px;
+}
+.printHeader{display:none}
+
+/* Diagnostics Panel Section */
+.diagSection{
+  margin-top:20px;
+  padding:16px;
+  background:var(--panel-2);
+  border-top:1px solid var(--line);
+}
+.diagSection h3{margin:0 0 10px;font-size:14px;color:var(--head-text)}
+.diagFilterBar{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 10px}
+.diagFilterBar label{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.diagFilterBar select{
+  padding:5px 8px;border:1px solid var(--line);border-radius:8px;
+  background:#1c1e26;color:#f5f5f7;font:inherit;font-size:12px;color-scheme:dark;min-width:140px;
+}
+.diagFilterBar select option{background:#1c1e26;color:#f5f5f7}
+.diagFilterBar select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(41,151,255,.22)}
+
+.diagTable{width:100%;border-collapse:collapse;font-size:12px}
+.diagTable th,.diagTable td{padding:6px 10px;border:1px solid var(--line2);text-align:left}
+.diagTable th{background:var(--head);color:var(--muted)}
+.diagTable td{vertical-align:top}
+.manualMatchBtn{
+  padding:3px 10px;font-size:11px;font-weight:600;border-radius:980px;
+  border:1px solid rgba(41,151,255,.45);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+.manualMatchBtn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.clearManualBtn{
+  padding:3px 8px;font-size:11px;border-radius:980px;margin-left:6px;
+  border:1px solid var(--danger-border);background:var(--danger-bg);color:var(--danger-text);cursor:pointer;
+}
+.cityMatchPanel{
+  margin:8px 0 12px;padding:12px;background:rgba(0,0,0,.35);
+  border:1px solid var(--line);border-radius:10px;
+}
+.cityMatchPanel h4{margin:0 0 8px;font-size:12px;color:var(--accent);font-weight:600}
+.cityMatchHint{font-size:11.5px;color:var(--muted);margin-bottom:10px}
+.cityCols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:900px){.cityCols{grid-template-columns:1fr}}
+.cityColTitle{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px;font-weight:600}
+.cityList{max-height:220px;overflow:auto;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.03)}
+.cityListFull{max-height:min(55vh,480px);max-height:480px}
+.cityItem{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+  padding:7px 10px;border-bottom:1px solid var(--line2);font-size:12px;cursor:default;
+}
+.cityItem:last-child{border-bottom:none}
+.cityItem.selectable{cursor:pointer}
+.cityItem.selectable:hover{background:var(--row-hover)}
+.cityItem.selected{background:var(--accent-soft);outline:1px solid rgba(41,151,255,.35)}
+.cityItemName{flex:1;min-width:0;word-break:break-word;white-space:normal;line-height:1.35}
+.cityItemMeta{font-size:11px;color:var(--muted);margin-top:2px}
+.pickBtn{
+  flex-shrink:0;padding:3px 10px;font-size:11px;font-weight:600;border-radius:980px;
+  border:1px solid rgba(48,209,88,.45);background:var(--added-bg);color:var(--added-text);cursor:pointer;
+}
+.pickBtn:hover{background:rgba(48,209,88,.35)}
+.noCityMsg{padding:12px;color:var(--muted);font-size:12px;font-style:italic}
+.backToInstBtn{
+  position:fixed;right:18px;bottom:22px;z-index:60;
+  padding:10px 16px;font-size:13px;font-weight:600;
+  border-radius:980px;border:1px solid rgba(41,151,255,.5);
+  background:rgba(41,151,255,.92);color:#fff;cursor:pointer;
+  box-shadow:0 8px 28px rgba(0,0,0,.45);
+  display:none;align-items:center;gap:8px;
+}
+.backToInstBtn.show{display:inline-flex}
+.backToInstBtn:hover{background:#40a3ff}
+.cityItemScore{font-size:10.5px;color:var(--accent);font-weight:600;margin-top:2px}
+.plusFilterBar{
+  display:flex;flex-wrap:wrap;align-items:center;gap:10px;
+  padding:8px 18px;background:rgba(16,17,22,.94);
+  border-bottom:1px solid var(--line);flex-shrink:0;
+}
+.plusFilterBar label{font-size:11.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+.plusFilterBar select,.plusFilterBar input{
+  padding:5px 8px;border:1px solid var(--line);border-radius:8px;
+  background:#1c1e26;color:#f5f5f7;font:inherit;font-size:12px;
+  color-scheme:dark;
+}
+.plusFilterBar select option{background:#1c1e26;color:#f5f5f7}
+.plusFilterBar select{min-width:120px}
+.plusFilterBar select[multiple]{min-width:140px;min-height:72px;padding:4px}
+.plusFilterBar input[type=number]{width:110px}
+.plusFilterBar select:focus,.plusFilterBar input:focus{
+  outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(41,151,255,.22);
+}
+.diagActionGroup{display:flex;flex-direction:column;gap:4px;align-items:stretch;min-width:110px}
+.diagActionLabel{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+.cityListFull{max-height:min(55vh,520px)}
+
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:rgba(0,0,0,.25)}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:980px;background-clip:content-box}
+
+@media print{
+  @page{margin:10mm}
+  body{background:#fff !important;color:#000 !important;display:block;height:auto}
+  .tabs,.choicesBar,#page-ranking,.menu,.loadPrompt{display:none !important}
+  #page-choices,#page-choices-plus{display:block !important}
+  .printHeader{display:block;margin-bottom:10px;border-bottom:2px solid #000;padding-bottom:6px}
+  .cWrap{overflow:visible !important;height:auto !important;background:#fff !important}
+  .cTable{width:100%;font-size:11px}
+  .cTable th{position:static;background:#eee !important;color:#000 !important;border:1px solid #999 !important}
+  .cTable td{border:1px solid #bbb !important;white-space:normal !important;height:auto !important;color:#000 !important}
+  .cAct,.dragHandle{display:none !important}
+}
+</style>
+</head>
+<body>
+
+<div class="tabs" role="tablist">
+  <button type="button" class="tab active" id="tab-ranking" role="tab" aria-selected="true">Ranking</button>
+  <button type="button" class="tab" id="tab-choices" role="tab" aria-selected="false">Choices <span class="badge" id="choiceBadge">0</span></button>
+  <button type="button" class="tab" id="tab-choices-plus" role="tab" aria-selected="false">Choice+</button>
+  <div class="tabRight">
+    <span id="rowCounter"></span>
+    <button type="button" id="upload1Btn" class="uploadTriggerBtn" title="Select and load 1.csv">Upload 1.csv</button>
+    <button type="button" id="upload2Btn" class="uploadTriggerBtn" title="Select and load 2.csv">Upload 2.csv</button>
+  </div>
+</div>
+
+<!-- PAGE 1: RANKING -->
+<div class="page active" id="page-ranking">
+  <div class="wrap" id="wrap">
+    <div class="grid" id="grid">
+      <div class="hdr" id="hdr">
+        <div class="cols" id="heads"></div>
+        <div class="cols filters" id="filters"></div>
+      </div>
+      <div class="body" id="body"></div>
+    </div>
+    <div class="loadPrompt" id="loadPrompt">Could not load <b>1.csv</b> automatically. <button id="pick" type="button">Choose 1.csv</button></div>
+  </div>
+</div>
+
+<!-- PAGE 2: CHOICES -->
+<div class="page" id="page-choices">
+  <div class="choicesBar">
+    <div class="choicesStats">
+      <span id="totalChoicesText">Total Selected Choices: 0</span>
+      <span class="choicesHint">Drag rows or use ▲ / ▼ to reorder preferences</span>
+    </div>
+    <div class="choicesActions">
+      <button type="button" id="backToRankingBtn">← Back to Ranking</button>
+      <button type="button" id="exportCsvBtn" class="btnPrimary">Export CSV</button>
+      <button type="button" id="printChoicesBtn">Print</button>
+      <button type="button" id="clearChoicesBtn" class="btnDanger">Clear All</button>
+    </div>
+  </div>
+  <div class="cWrap">
+    <div class="printHeader">
+      <h2>NEET PG Counselling — Personal Preference List</h2>
+      <p id="printMeta"></p>
+    </div>
+    <table class="cTable" id="choicesTable">
+      <thead>
+        <tr>
+          <th class="cPref">Pref #</th>
+          <th class="cRank" id="cThRank">Rank</th>
+          <th class="cQuota" id="cThQuota">Quota</th>
+          <th class="cInst" id="cThInst">Institute</th>
+          <th class="cCourse" id="cThCourse">Course</th>
+          <th class="cAct">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="choicesBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PAGE 3: CHOICE+ -->
+<div class="page" id="page-choices-plus">
+  <div class="choicesBar">
+    <div class="choicesStats">
+      <span id="totalChoicesPlusText">Total Choices Enriched: 0</span>
+      <span class="diagBadge" id="diagMatchedBadge">Matched: 0</span>
+      <span class="diagBadge" id="diagManualBadge">Manual: 0</span>
+      <span class="diagBadge" id="diagAmbiguousBadge">Ambiguous: 0</span>
+      <span class="diagBadge" id="diagUnmatchedBadge">Unmatched: 0</span>
+      <span class="choicesHint" id="csv2StatusHint" style="display:none" aria-hidden="true"></span>
+    </div>
+    <div class="choicesActions">
+      <button type="button" id="backToRankingFromPlusBtn">← Back to Ranking</button>
+      <button type="button" id="exportPlusCsvBtn" class="btnPrimary">Export CSV</button>
+      <button type="button" id="printPlusBtn">Print</button>
+    </div>
+  </div>
+  <div class="plusFilterBar" id="plusFilterBar">
+    <label>Sort
+      <select id="plusSortSelect">
+        <option value="pref">Preference order</option>
+        <option value="rankAsc">Rank: Low → High</option>
+        <option value="stipendDesc">Stipend: High → Low</option>
+      </select>
+    </label>
+    <label>Min stipend
+      <input id="plusMinStipend" type="number" min="0" step="1000" placeholder="e.g. 50000" title="Show only institutes with stipend greater than this amount">
+    </label>
+    <label>Bond
+      <select id="plusBondFilter" multiple size="4" title="Click to select. Hold Ctrl (Windows) or Cmd (Mac) to select multiple. Empty selection = all bonds."></select>
+    </label>
+    <label>Penalty
+      <select id="plusPenaltyFilter"><option value="">All penalties</option></select>
+    </label>
+    <span class="choicesHint" id="plusFilterCount"></span>
+  </div>
+  <div class="cWrap">
+    <div class="printHeader">
+      <h2>NEET PG Counselling — Choice+ Enriched Preference List</h2>
+      <p id="printPlusMeta"></p>
+    </div>
+    <table class="cTable plusTable" id="choicesPlusTable">
+      <thead>
+        <tr>
+          <th class="cPref">Pref #</th>
+          <th class="cRank" id="cPThRank">Rank</th>
+          <th class="cQuota" id="cPThQuota">Quota</th>
+          <th class="cInst" id="cPThInst">Institute</th>
+          <th class="cCourse" id="cPThCourse">Course</th>
+          <th class="cStipend" id="cPThStipend">Stipend</th>
+          <th class="cBond" id="cPThBond">Bond</th>
+          <th class="cPenalty" id="cPThPenalty">Penalty</th>
+        </tr>
+      </thead>
+      <tbody id="choicesPlusBody"></tbody>
+    </table>
+
+    <div class="diagSection">
+      <h3>Matching Diagnostics</h3>
+      <p class="choicesHint" style="margin:0 0 10px">Use Find Match to link an institute by city. Saved links are kept for next time.</p>
+      <div class="diagFilterBar">
+        <label>Actions
+          <select id="diagActionFilter">
+            <option value="">All actions</option>
+            <option value="find">Find Match</option>
+            <option value="override">Override</option>
+            <option value="clear">Clear</option>
+          </select>
+        </label>
+        <span class="choicesHint" id="diagFilterCount"></span>
+      </div>
+      <table class="diagTable">
+        <thead>
+          <tr>
+            <th>Pref #</th>
+            <th>Choice Institute</th>
+            <th>Matched 2.csv Institute</th>
+            <th style="width:160px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="diagTableBody"></tbody>
+      </table>
+      <div id="manualMatchHost"></div>
+    </div>
+  </div>
+</div>
+
+<input id="file1Input" type="file" accept=".csv,text/csv" class="fileInputHidden">
+<input id="file2Input" type="file" accept=".csv,text/csv" class="fileInputHidden">
+
+<div class="menu" id="menu">
+  <input class="mq" id="mq" type="search" placeholder="Search values…" autocomplete="off">
+  <div class="mall" id="mall"><input type="checkbox" id="mallcb"><span id="malltxt">(Select all)</span></div>
+  <div class="mlist" id="mlist"><div id="mspacer"></div></div>
+  <div class="mfoot"><span id="mcount"></span><button id="mclear" type="button">Clear</button></div>
+</div>
+
+<button type="button" class="backToInstBtn" id="backToInstBtn" title="Return to the institute you were matching">↑ Back to Institute</button>
+
+<script>
+(function(){
+"use strict";
+var ROW_H=32, BUFFER=12;
+var STORAGE_KEY="neet_pg_counselling_choices_v1";
+var MANUAL_MAP_KEY="neet_pg_manual_institute_maps_v1";
+var manualMaps={}; // choiceInstituteKey -> { institute, stipend, bond, penalty }
+var openManualPref=-1; // which pref panel is open
+var plusSortMode="pref";
+var plusMinStipendVal="";
+var plusBondVal=[];
+var plusPenaltyVal="";
+var plusRowsCache=[]; // enriched rows for filter/sort
+var diagActionFilterVal="";
+var diagRowsCache=[]; // {html, action}
+var headers=["rank","quota","institute","course"];
+var data=[];
+var lowered=[];
+var view=[];
+var colFilters=["","","",""];
+var sel=[null,null,null,null];
+var uniq=[[],[],[],[]];
+
+var sortCol=-1, sortDir=0;
+var activeTab="ranking";
+var savedScrollTop=0;
+
+var choices=[];
+var choiceKeySet=new Set();
+
+var csv2Records=[];
+var csv2Loaded=false;
+
+var $=function(id){return document.getElementById(id)};
+var wrap=$("wrap"), body=$("body"), headsEl=$("heads"), filtersEl=$("filters");
+
+function makeChoiceKey(quota, institute, course){
+  return [quota.trim(), institute.trim(), course.trim()].join("\u001F");
+}
+
+function rebuildKeySet(){
+  choiceKeySet.clear();
+  for(var i=0;i<choices.length;i++){
+    choiceKeySet.add(choices[i].key);
+  }
+}
+
+function saveChoices(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(choices));
+  }catch(e){
+    console.error("Error saving choices:", e);
+  }
+}
+
+function makeManualKey(institute){
+  return String(institute||"").trim().toLowerCase().replace(/\s+/g," ");
+}
+
+function saveManualMaps(){
+  try{
+    localStorage.setItem(MANUAL_MAP_KEY, JSON.stringify(manualMaps));
+  }catch(e){
+    console.error("Error saving manual maps:", e);
+  }
+}
+
+function loadManualMaps(){
+  try{
+    var raw=localStorage.getItem(MANUAL_MAP_KEY);
+    if(!raw){ manualMaps={}; return; }
+    var parsed=JSON.parse(raw);
+    if(!parsed || typeof parsed!=="object"){ manualMaps={}; return; }
+    manualMaps=parsed;
+  }catch(e){
+    console.error("Error loading manual maps:", e);
+    manualMaps={};
+  }
+}
+
+function getManualMapping(choiceInst){
+  var key=makeManualKey(choiceInst);
+  return manualMaps[key] || null;
+}
+
+function setManualMapping(choiceInst, csv2Institute){
+  var key=makeManualKey(choiceInst);
+  if(!csv2Institute){
+    delete manualMaps[key];
+    saveManualMaps();
+    return;
+  }
+  // Resolve live stipend/bond/penalty from current 2.csv when possible
+  var found=null;
+  for(var i=0;i<csv2Records.length;i++){
+    if(csv2Records[i].institute === csv2Institute){ found=csv2Records[i]; break; }
+  }
+  if(!found){
+    // fuzzy by normalized name
+    var nk=makeManualKey(csv2Institute);
+    for(var j=0;j<csv2Records.length;j++){
+      if(makeManualKey(csv2Records[j].institute)===nk){ found=csv2Records[j]; break; }
+    }
+  }
+  manualMaps[key]={
+    institute: found ? found.institute : csv2Institute,
+    stipend: found ? (found.stipend||"") : "",
+    bond: found ? (found.bond||"") : "",
+    penalty: found ? (found.penalty||"") : ""
+  };
+  saveManualMaps();
+}
+
+function resolveInstituteMatch(choiceInst){
+  // 1) Manual mapping always wins
+  var man=getManualMapping(choiceInst);
+  if(man && man.institute){
+    // Refresh stipend/bond/penalty from live 2.csv if present
+    var live=null;
+    for(var i=0;i<csv2Records.length;i++){
+      if(csv2Records[i].institute===man.institute || makeManualKey(csv2Records[i].institute)===makeManualKey(man.institute)){
+        live=csv2Records[i]; break;
+      }
+    }
+    return {
+      item: {
+        institute: live ? live.institute : man.institute,
+        stipend: live ? (live.stipend||"") : (man.stipend||""),
+        bond: live ? (live.bond||"") : (man.bond||""),
+        penalty: live ? (live.penalty||"") : (man.penalty||"")
+      },
+      rule: "Manual mapping",
+      status: "manual",
+      score: 999
+    };
+  }
+  // 2) Automatic algorithm (unchanged)
+  return matchChoiceWith2Csv(choiceInst);
+}
+
+/* ===== Indian city / state reference (Census & common official spellings) ===== */
+var INDIAN_STATES = {
+  // full names
+  andhrapradesh:1, arunachalpradesh:1, assam:1, bihar:1, chhattisgarh:1, goa:1, gujarat:1,
+  haryana:1, himachalpradesh:1, jharkhand:1, karnataka:1, kerala:1, madhyapradesh:1,
+  maharashtra:1, manipur:1, meghalaya:1, mizoram:1, nagaland:1, odisha:1, orissa:1,
+  punjab:1, rajasthan:1, sikkim:1, tamilnadu:1, telangana:1, tripura:1, uttarpradesh:1,
+  uttarakhand:1, uttaranchal:1, westbengal:1,
+  // UTs
+  andamanandnicobarislands:1, andamannicobar:1, chandigarh:1,
+  dadraandnagarhaveli:1, dadraandnagarhavelianddamananddiu:1, damananddiu:1,
+  delhi:0, /* delhi is both NCT/UT and city-region; handled as city below */
+  jammuandkashmir:1, ladakh:1, lakshadweep:1, puducherry:1, pondicherry:1, nct:1, nctofdelhi:1,
+  // multi-word forms normalized without spaces are above; also flag common split tokens when alone in state context
+  pradesh:1, nadu:1, bengal:1
+};
+
+var INDIAN_STATE_WORDS = {
+  andhra:1, arunachal:1, pradesh:1, uttar:1, madhya:1, himachal:1, west:1, bengal:1,
+  tamil:1, nadu:1, jammu:1, kashmir:1, nct:1
+};
+
+// Canonical city key -> aliases (lowercase, no spaces in keys used for lookup via compact form)
+// Source basis: Census towns/cities + medical-college cities commonly used in NEET PG data
+var INDIAN_CITY_DB = {
+  // metros / large
+  "delhi": ["delhi","new delhi","newdelhi","nct delhi","delhi nct"],
+  "mumbai": ["mumbai","bombay","mumbai city"],
+  "bengaluru": ["bengaluru","bangalore","bengalore","bangaluru"],
+  "chennai": ["chennai","madras"],
+  "kolkata": ["kolkata","calcutta"],
+  "hyderabad": ["hyderabad"],
+  "secunderabad": ["secunderabad"],
+  "pune": ["pune","poona"],
+  "ahmedabad": ["ahmedabad","amdavad"],
+  "jaipur": ["jaipur"],
+  "surat": ["surat"],
+  "lucknow": ["lucknow"],
+  "kanpur": ["kanpur","cawnpore"],
+  "nagpur": ["nagpur"],
+  "indore": ["indore"],
+  "bhopal": ["bhopal"],
+  "visakhapatnam": ["visakhapatnam","vizag","vishakhapatnam","visakha"],
+  "patna": ["patna"],
+  "vadodara": ["vadodara","baroda"],
+  "ghaziabad": ["ghaziabad"],
+  "ludhiana": ["ludhiana"],
+  "agra": ["agra"],
+  "nashik": ["nashik","nasik"],
+  "faridabad": ["faridabad"],
+  "meerut": ["meerut"],
+  "rajkot": ["rajkot"],
+  "varanasi": ["varanasi","benaras","banaras","kashi"],
+  "srinagar": ["srinagar"],
+  "amritsar": ["amritsar"],
+  "ranchi": ["ranchi"],
+  "chandigarh": ["chandigarh"],
+  "thiruvananthapuram": ["thiruvananthapuram","trivandrum","tvm"],
+  "kochi": ["kochi","cochin","ernakulam"],
+  "coimbatore": ["coimbatore","kovai"],
+  "madurai": ["madurai"],
+  "guwahati": ["guwahati","gauhati"],
+  "gwalior": ["gwalior"],
+  "vijayawada": ["vijayawada","bezawada"],
+  "jodhpur": ["jodhpur"],
+  "raipur": ["raipur"],
+  "kota": ["kota"],
+  "dehradun": ["dehradun","dehra dun"],
+  "asansol": ["asansol"],
+  "solapur": ["solapur","sholapur"],
+  "hubballi": ["hubballi","hubli","hubli-dharwad","hubballi dharwad"],
+  "tiruchirappalli": ["tiruchirappalli","trichy","tiruchi","tiruchirapalli"],
+  "bareilly": ["bareilly"],
+  "mysuru": ["mysuru","mysore"],
+  "tiruppur": ["tiruppur","tirupur"],
+  "gurgaon": ["gurugram","gurgaon"],
+  "noida": ["noida","greater noida","greaternoida"],
+  "aligarh": ["aligarh"],
+  "jalandhar": ["jalandhar","jullundur"],
+  "bhubaneswar": ["bhubaneswar","bhubaneshwar"],
+  "salem": ["salem"],
+  "warangal": ["warangal","hanamkonda","hanumakonda"],
+  "mira bhayandar": ["mira bhayandar","mira-bhayandar"],
+  "jalgaon": ["jalgaon"],
+  "kota": ["kota"],
+  "guntur": ["guntur"],
+  "bhiwandi": ["bhiwandi"],
+  "saharanpur": ["saharanpur"],
+  "gorakhpur": ["gorakhpur"],
+  "bikaner": ["bikaner"],
+  "amravati": ["amravati","amaravati"],
+  "noida": ["noida"],
+  "jamshedpur": ["jamshedpur","tatanagar"],
+  "bhilai": ["bhilai","bhilai nagar"],
+  "cuttack": ["cuttack"],
+  "firozabad": ["firozabad"],
+  "kochi": ["kochi","cochin"],
+  "bhavnagar": ["bhavnagar"],
+  "durgapur": ["durgapur"],
+  "asansol": ["asansol"],
+  "nanded": ["nanded"],
+  "kolhapur": ["kolhapur"],
+  "ajmer": ["ajmer"],
+  "gulbarga": ["kalaburagi","gulbarga"],
+  "jamnagar": ["jamnagar"],
+  "ujjain": ["ujjain"],
+  "loni": ["loni"],
+  "siliguri": ["siliguri"],
+  "jhansi": ["jhansi"],
+  "jammu": ["jammu"],
+  "mangaluru": ["mangaluru","mangalore"],
+  "belagavi": ["belagavi","belgaum"],
+  "tirunelveli": ["tirunelveli"],
+  "malegaon": ["malegaon"],
+  "gaya": ["gaya"],
+  "jalna": ["jalna"],
+  "udaipur": ["udaipur"],
+  "davangere": ["davangere","davanagere"],
+  "kozhikode": ["kozhikode","calicut"],
+  "akola": ["akola"],
+  "kurnool": ["kurnool"],
+  "rajahmundry": ["rajahmundry","rajamahendravaram","rajahmundry"],
+  "bokaro": ["bokaro","bokaro steel city"],
+  "ballari": ["ballari","bellary"],
+  "nellore": ["nellore"],
+  "anantapur": ["anantapur","anantapuramu"],
+  "kakinada": ["kakinada"],
+  "tirupati": ["tirupati","tirupathi"],
+  "karimnagar": ["karimnagar"],
+  "nizamabad": ["nizamabad"],
+  "adilabad": ["adilabad"],
+  "mahbubnagar": ["mahabubnagar","mahbubnagar"],
+  "srikakulam": ["srikakulam"],
+  "vizianagaram": ["vizianagaram"],
+  "eluru": ["eluru"],
+  "ongole": ["ongole"],
+  "kadapa": ["kadapa","cuddapah","yadiki"],
+  "nandyal": ["nandyal"],
+  "machilipatnam": ["machilipatnam","masulipatnam"],
+  "tenali": ["tenali"],
+  "proddatur": ["proddatur"],
+  "hindupur": ["hindupur"],
+  "madanapalle": ["madanapalle"],
+  "adoni": ["adoni"],
+  "gudivada": ["gudivada"],
+  "gudur": ["gudur"],
+  "nuzvid": ["nuzvid","nuzvidu"],
+  "narasaraopet": ["narasaraopet"],
+  "tanuku": ["tanuku"],
+  "anakapalli": ["anakapalli","anakapalle"],
+  "markapur": ["markapur"],
+  "atmakur": ["atmakur"],
+  "kalahasthi": ["srikalahasthi","srikalahasti","kalahasthi"],
+  "ramachandrapuram": ["ramachandrapuram"],
+  "shimla": ["shimla"],
+  "solan": ["solan"],
+  "mandi": ["mandi"],
+  "dharamshala": ["dharamshala","dharamsala"],
+  "tanda": ["tanda"],
+  "kangra": ["kangra"],
+  "rohtak": ["rohtak"],
+  "hisar": ["hisar","hissar"],
+  "karnal": ["karnal"],
+  "panipat": ["panipat"],
+  "ambala": ["ambala"],
+  "yamunanagar": ["yamunanagar"],
+  "sonipat": ["sonipat","sonepat"],
+  "rewari": ["rewari"],
+  "bhiwani": ["bhiwani"],
+  "sirsa": ["sirsa"],
+  "jind": ["jind"],
+  "kaithal": ["kaithal"],
+  "palwal": ["palwal"],
+  "nuh": ["nuh","mewat"],
+  "patiala": ["patiala"],
+  "bathinda": ["bathinda","bhatinda"],
+  "mohali": ["mohali","sas nagar","s.a.s. nagar","sahibzada ajit singh nagar"],
+  "pathankot": ["pathankot"],
+  "hoshiarpur": ["hoshiarpur"],
+  "firozpur": ["firozpur","ferozepur"],
+  "sangrur": ["sangrur"],
+  "barnala": ["barnala"],
+  "moga": ["moga"],
+  "fazilka": ["fazilka"],
+  "muktsar": ["muktsar","sri muktsar sahib"],
+  "kapurthala": ["kapurthala"],
+  "gurdaspur": ["gurdaspur"],
+  "ropar": ["ropar","rupnagar"],
+  "ajmer": ["ajmer"],
+  "bikaner": ["bikaner"],
+  "alwar": ["alwar"],
+  "bhilwara": ["bhilwara"],
+  "sikar": ["sikar"],
+  "pali": ["pali"],
+  "sri ganganagar": ["sri ganganagar","ganganagar","sriganganagar"],
+  "hanumangarh": ["hanumangarh"],
+  "churu": ["churu"],
+  "jhunjhunu": ["jhunjhunu"],
+  "nagaur": ["nagaur"],
+  "tonk": ["tonk"],
+  "bundi": ["bundi"],
+  "baran": ["baran"],
+  "dholpur": ["dholpur"],
+  "karauli": ["karauli"],
+  "sawai madhopur": ["sawai madhopur","madhopur"],
+  "banswara": ["banswara"],
+  "dungarpur": ["dungarpur"],
+  "chittorgarh": ["chittorgarh","chittaurgarh"],
+  "rajsamand": ["rajsamand"],
+  "sirohi": ["sirohi"],
+  "jalore": ["jalore"],
+  "barmer": ["barmer"],
+  "jaisalmer": ["jaisalmer"],
+  "pratapgarh": ["pratapgarh"],
+  "jhalawar": ["jhalawar"],
+  "bharatpur": ["bharatpur"],
+  "kota": ["kota"],
+  "jabalpur": ["jabalpur"],
+  "rewa": ["rewa"],
+  "sagar": ["sagar"],
+  "satna": ["satna"],
+  "ratlam": ["ratlam"],
+  "ujjain": ["ujjain"],
+  "guna": ["guna"],
+  "vidisha": ["vidisha"],
+  "shivpuri": ["shivpuri"],
+  "morena": ["morena"],
+  "sehore": ["sehore"],
+  "chhindwara": ["chhindwara"],
+  "betul": ["betul"],
+  "khandwa": ["khandwa"],
+  "burhanpur": ["burhanpur"],
+  "mandsaur": ["mandsaur"],
+  "neemuch": ["neemuch"],
+  "damoh": ["damoh"],
+  "panna": ["panna"],
+  "tikamgarh": ["tikamgarh"],
+  "chhatarpur": ["chhatarpur"],
+  "datia": ["datia"],
+  "sheopur": ["sheopur"],
+  "mandla": ["mandla"],
+  "dindori": ["dindori"],
+  "balaghat": ["balaghat"],
+  "seoni": ["seoni"],
+  "narsinghpur": ["narsinghpur","narsimhapur"],
+  "hoshiarpur": ["hoshiarpur"],
+  "aurangabad": ["aurangabad","chhatrapati sambhajinagar","sambhajinagar"],
+  "nanded": ["nanded"],
+  "solapur": ["solapur"],
+  "latur": ["latur"],
+  "dhule": ["dhule"],
+  "jalgaon": ["jalgaon"],
+  "ahmednagar": ["ahmednagar","ahilyanagar"],
+  "satara": ["satara"],
+  "sangli": ["sangli"],
+  "beed": ["beed","bid"],
+  "osmanabad": ["osmanabad","dharashiv"],
+  "parbhani": ["parbhani"],
+  "hingoli": ["hingoli"],
+  "washim": ["washim"],
+  "yavatmal": ["yavatmal"],
+  "chandrapur": ["chandrapur"],
+  "gadchiroli": ["gadchiroli"],
+  "gondia": ["gondia"],
+  "bhandara": ["bhandara"],
+  "wardha": ["wardha"],
+  "akola": ["akola"],
+  "buldhana": ["buldhana","buldana"],
+  "raigad": ["raigad","alibag"],
+  "ratnagiri": ["ratnagiri"],
+  "sindhudurg": ["sindhudurg"],
+  "thane": ["thane"],
+  "kalyan": ["kalyan"],
+  "panvel": ["panvel"],
+  "navi mumbai": ["navi mumbai","new mumbai","nerul","vashi"],
+  "miraj": ["miraj"],
+  "ambajogai": ["ambajogai"],
+  "yavatmal": ["yavatmal"],
+  "cuttack": ["cuttack"],
+  "rourkela": ["rourkela"],
+  "berhampur": ["berhampur","brahmapur","berhampore"],
+  "sambalpur": ["sambalpur"],
+  "balasore": ["balasore","baleswar"],
+  "baripada": ["baripada"],
+  "puri": ["puri"],
+  "balangir": ["balangir","bolangir"],
+  "koraput": ["koraput"],
+  "bhawanipatna": ["bhawanipatna","kalahandi"],
+  "kendrapara": ["kendrapara"],
+  "khordha": ["khordha","khurda"],
+  "nayagarh": ["nayagarh"],
+  "angul": ["angul","anugul"],
+  "dhenkanal": ["dhenkanal"],
+  "jharsuguda": ["jharsuguda"],
+  "bargarh": ["bargarh"],
+  "rayagada": ["rayagada"],
+  "nabarangpur": ["nabarangpur"],
+  "malkangiri": ["malkangiri"],
+  "nuapada": ["nuapada"],
+  "boudh": ["boudh"],
+  "kandhamal": ["kandhamal","phulbani"],
+  "gajapati": ["gajapati","paralakhemundi"],
+  "jagatsinghpur": ["jagatsinghpur"],
+  "jajpur": ["jajpur"],
+  "bhadrak": ["bhadrak"],
+  "mayurbhanj": ["mayurbhanj"],
+  "keonjhar": ["keonjhar","kendujhar"],
+  "sundargarh": ["sundargarh"],
+  "deogarh": ["deogarh"],
+  "sonepur": ["sonepur","subarnapur"],
+  "imphal": ["imphal"],
+  "shillong": ["shillong"],
+  "aizawl": ["aizawl"],
+  "kohima": ["kohima"],
+  "agartala": ["agartala"],
+  "gangtok": ["gangtok"],
+  "itanagar": ["itanagar"],
+  "naharlagun": ["naharlagun"],
+  "pasighat": ["pasighat"],
+  "port blair": ["port blair","portblair"],
+  "kavaratti": ["kavaratti"],
+  "silvassa": ["silvassa"],
+  "daman": ["daman"],
+  "diu": ["diu"],
+  "kargil": ["kargil"],
+  "leh": ["leh"],
+  "pondicherry": ["puducherry","pondicherry","pondichery"],
+  "karaikal": ["karaikal"],
+  "mahe": ["mahe"],
+  "yanam": ["yanam"],
+  "alappuzha": ["alappuzha","alleppey","allappuzha"],
+  "kottayam": ["kottayam"],
+  "thrissur": ["thrissur","trichur"],
+  "palakkad": ["palakkad","palghat"],
+  "malappuram": ["malappuram"],
+  "kannur": ["kannur","cannanore"],
+  "kasaragod": ["kasaragod","kasargod"],
+  "pathanamthitta": ["pathanamthitta"],
+  "idukki": ["idukki"],
+  "wayanad": ["wayanad","wynad"],
+  "kollam": ["kollam","quilon"],
+  "thanjavur": ["thanjavur","tanjore"],
+  "tiruppur": ["tiruppur"],
+  "erode": ["erode"],
+  "vellore": ["vellore"],
+  "thoothukudi": ["thoothukudi","tuticorin"],
+  "dindigul": ["dindigul"],
+  "nagercoil": ["nagercoil"],
+  "kanchipuram": ["kanchipuram","kancheepuram"],
+  "cuddalore": ["cuddalore"],
+  "karur": ["karur"],
+  "namakkal": ["namakkal"],
+  "hosur": ["hosur"],
+  "pollachi": ["pollachi"],
+  "rajapalayam": ["rajapalayam"],
+  "sivakasi": ["sivakasi"],
+  "udhagamandalam": ["udhagamandalam","ooty","ootacamund"],
+  "kumbakonam": ["kumbakonam"],
+  "ranipet": ["ranipet"],
+  "tiruvannamalai": ["tiruvannamalai"],
+  "villupuram": ["villupuram","viluppuram"],
+  "pudukkottai": ["pudukkottai"],
+  "ramanathapuram": ["ramanathapuram","ramnad"],
+  "sivaganga": ["sivaganga"],
+  "theni": ["theni"],
+  "perambalur": ["perambalur"],
+  "ariyalur": ["ariyalur"],
+  "nilgiris": ["nilgiris"],
+  "krishnagiri": ["krishnagiri"],
+  "dharmapuri": ["dharmapuri"],
+  "mayiladuthurai": ["mayiladuthurai","mayladuthurai"],
+  "chengalpattu": ["chengalpattu"],
+  "tiruvallur": ["tiruvallur","thiruvallur"],
+  "kallakurichi": ["kallakurichi"],
+  "tenkasi": ["tenkasi"],
+  "shirwal": ["shirwal"],
+  "hassan": ["hassan"],
+  "mandya": ["mandya"],
+  "kolar": ["kolar"],
+  "chikkamagaluru": ["chikkamagaluru","chikmagalur","chikmagaluru"],
+  "chitradurga": ["chitradurga"],
+  "raichur": ["raichur"],
+  "bidar": ["bidar"],
+  "udupi": ["udupi"],
+  "dakshina kannada": ["dakshina kannada","mangalore"],
+  "uttara kannada": ["uttara kannada","karwar"],
+  "karwar": ["karwar"],
+  "kodagu": ["kodagu","coorg","madikeri"],
+  "chikkaballapur": ["chikkaballapur","chikballapur"],
+  "ramanagara": ["ramanagara"],
+  "yadgir": ["yadgir"],
+  "koppal": ["koppal"],
+  "gadag": ["gadag"],
+  "haveri": ["haveri"],
+  "bagalkot": ["bagalkot","bagalkote"],
+  "vijayapura": ["vijayapura","bijapur"],
+  "shivamogga": ["shivamogga","shimoga"],
+  "tumakuru": ["tumakuru","tumkur"],
+  "dharwad": ["dharwad"],
+  "hampi": ["hampi"],
+  "ballari": ["ballari","bellary"],
+  "kalaburagi": ["kalaburagi","gulbarga"],
+  "bilaspur": ["bilaspur"],
+  "durg": ["durg"],
+  "bhilai": ["bhilai"],
+  "korba": ["korba"],
+  "raigarh": ["raigarh"],
+  "jagdalpur": ["jagdalpur"],
+  "ambikapur": ["ambikapur"],
+  "rajnandgaon": ["rajnandgaon"],
+  "dhamtari": ["dhamtari"],
+  "kanker": ["kanker"],
+  "kabirdham": ["kabirdham","kawardha"],
+  "surajpur": ["surajpur"],
+  "surguja": ["surguja"],
+  "dantewada": ["dantewada"],
+  "bastar": ["bastar"],
+  "muzaffarpur": ["muzaffarpur"],
+  "bhagalpur": ["bhagalpur"],
+  "gaya": ["gaya"],
+  "darbhanga": ["darbhanga"],
+  "purnea": ["purnea","purnia"],
+  "arrah": ["arrah","ara"],
+  "begusarai": ["begusarai"],
+  "katihar": ["katihar"],
+  "munger": ["munger","monghyr"],
+  "chhapra": ["chhapra","saran"],
+  "sasaram": ["sasaram"],
+  "hajipur": ["hajipur"],
+  "siwan": ["siwan"],
+  "motihari": ["motihari"],
+  "samastipur": ["samastipur"],
+  "bettiah": ["bettiah"],
+  "biharsharif": ["biharsharif","bihar sharif"],
+  "nalanda": ["nalanda","rajgir"],
+  "jehanabad": ["jehanabad"],
+  "nawada": ["nawada"],
+  "jamui": ["jamui"],
+  "lakhisarai": ["lakhisarai"],
+  "sheikhpura": ["sheikhpura"],
+  "madhepura": ["madhepura"],
+  "saharsa": ["saharsa"],
+  "supaul": ["supaul"],
+  "kishanganj": ["kishanganj"],
+  "araria": ["araria"],
+  "banka": ["banka"],
+  "buxar": ["buxar"],
+  "bhabua": ["bhabua","kaimur"],
+  "sitamarhi": ["sitamarhi"],
+  "sheohar": ["sheohar"],
+  "madhubani": ["madhubani"],
+  "khagaria": ["khagaria"],
+  "gopalganj": ["gopalganj"],
+  "vaishali": ["vaishali"],
+  "muzaffarpur": ["muzaffarpur"],
+  "dhanbad": ["dhanbad"],
+  "jamshedpur": ["jamshedpur"],
+  "ranchi": ["ranchi"],
+  "bokaro": ["bokaro"],
+  "hazaribagh": ["hazaribagh","hazaribag"],
+  "deoghar": ["deoghar"],
+  "giridih": ["giridih"],
+  "dumka": ["dumka"],
+  "phalodi": ["phalodi"],
+  "silchar": ["silchar"],
+  "dibrugarh": ["dibrugarh"],
+  "jorhat": ["jorhat"],
+  "tezpur": ["tezpur"],
+  "nagaon": ["nagaon"],
+  "tinsukia": ["tinsukia"],
+  "bongaigaon": ["bongaigaon"],
+  "karimganj": ["karimganj"],
+  "sivasagar": ["sivasagar","sibsagar"],
+  "goalpara": ["goalpara"],
+  "barpeta": ["barpeta"],
+  "darrang": ["darrang"],
+  "lakhimpur": ["lakhimpur"],
+  "golaghat": ["golaghat"],
+  "kokrajhar": ["kokrajhar"],
+  "hailakandi": ["hailakandi"],
+  "morigaon": ["morigaon"],
+  "nalbari": ["nalbari"],
+  "udalguri": ["udalguri"],
+  "baksa": ["baksa"],
+  "chirang": ["chirang"],
+  "kamrup": ["kamrup"],
+  "dispur": ["dispur"],
+  "prayagraj": ["prayagraj","allahabad"],
+  "ayodhya": ["ayodhya","faizabad"],
+  "gorakhpur": ["gorakhpur"],
+  "meerut": ["meerut"],
+  "bareilly": ["bareilly"],
+  "moradabad": ["moradabad"],
+  "aligarh": ["aligarh"],
+  "saharanpur": ["saharanpur"],
+  "jhansi": ["jhansi"],
+  "firozabad": ["firozabad"],
+  "muzaffarnagar": ["muzaffarnagar"],
+  "mathura": ["mathura"],
+  "rampur": ["rampur"],
+  "shahjahanpur": ["shahjahanpur"],
+  "farrukhabad": ["farrukhabad"],
+  "etah": ["etah"],
+  "etah": ["etah"],
+  "etawah": ["etawah"],
+  "mainpuri": ["mainpuri"],
+  "budaun": ["budaun","badaun"],
+  "pilibhit": ["pilibhit"],
+  "hardoi": ["hardoi"],
+  "unnao": ["unnao"],
+  "raebareli": ["raebareli","rae bareli"],
+  "sitapur": ["sitapur"],
+  "lakhimpur": ["lakhimpur","kheri"],
+  "bahraich": ["bahraich"],
+  "gonda": ["gonda"],
+  "sultanpur": ["sultanpur"],
+  "pratapgarh": ["pratapgarh"],
+  "jaunpur": ["jaunpur"],
+  "mirzapur": ["mirzapur"],
+  "basti": ["basti"],
+  "deoria": ["deoria"],
+  "azamgarh": ["azamgarh"],
+  "mau": ["mau"],
+  "ballia": ["ballia"],
+  "ghazipur": ["ghazipur"],
+  "chandausi": ["chandausi"],
+  "hapur": ["hapur"],
+  "bulandshahr": ["bulandshahr"],
+  "khurja": ["khurja"],
+  "sambhal": ["sambhal"],
+  "amroha": ["amroha"],
+  "bijnor": ["bijnor"],
+  "najibabad": ["najibabad"],
+  "kasganj": ["kasganj"],
+  "kannauj": ["kannauj"],
+  "fatehpur": ["fatehpur"],
+  "banda": ["banda"],
+  "chitrakoot": ["chitrakoot"],
+  "hamirpur": ["hamirpur"],
+  "mahort": ["maharajganj"],
+  "maharajganj": ["maharajganj"],
+  "siddharthnagar": ["siddharthnagar"],
+  "balrampur": ["balrampur"],
+  "shravasti": ["shravasti"],
+  "kushinagar": ["kushinagar"],
+  "padrauna": ["padrauna"],
+  "haldwani": ["haldwani"],
+  "haridwar": ["haridwar","hardwar"],
+  "roorkee": ["roorkee"],
+  "rishikesh": ["rishikesh"],
+  "nainital": ["nainital"],
+  "almora": ["almora"],
+  "pithoragarh": ["pithoragarh"],
+  "champawat": ["champawat"],
+  "rudrapur": ["rudrapur"],
+  "kashipur": ["kashipur"],
+  "srinagar garhwal": ["srinagar garhwal"],
+  "pauri": ["pauri"],
+  "tehri": ["tehri"],
+  "uttarkashi": ["uttarkashi"],
+  "chamoli": ["chamoli"],
+  "rudraprayag": ["rudraprayag"],
+  "bageshwar": ["bageshwar"],
+  "siliguri": ["siliguri"],
+  "durgapur": ["durgapur"],
+  "asansol": ["asansol"],
+  "howrah": ["howrah","haora"],
+  "durgapur": ["durgapur"],
+  "bardhaman": ["bardhaman","burdwan"],
+  "malda": ["malda","maldah"],
+  "baharampur": ["baharampur","berhampore"],
+  "kharagpur": ["kharagpur"],
+  "haldia": ["haldia"],
+  "krishnanagar": ["krishnanagar"],
+  "midnapore": ["midnapore","medinipur","midnapur"],
+  "cooch behar": ["cooch behar","coochbehar","koch bihar"],
+  "jalpaiguri": ["jalpaiguri"],
+  "darjeeling": ["darjeeling"],
+  "bankura": ["bankura"],
+  "purulia": ["purulia"],
+  "raiganj": ["raiganj"],
+  "balurghat": ["balurghat"],
+  "alipurduar": ["alipurduar"],
+  "barasat": ["barasat"],
+  "barrackpore": ["barrackpore","barrackpur"],
+  "kalyani": ["kalyani"],
+  "hapur": ["hapur"],
+  "serampore": ["serampore","sreerampur"],
+  "chandannagar": ["chandannagar","chandernagore"],
+  "barasat": ["barasat"],
+  "basirhat": ["basirhat"],
+  "diamond harbour": ["diamond harbour"],
+  "baruipur": ["baruipur"],
+  "contiai": ["contai"],
+  "tamluk": ["tamluk"],
+  "ghatal": ["ghatal"],
+  "jhargram": ["jhargram"],
+  "bolpur": ["bolpur"],
+  "rampurhat": ["rampurhat"],
+  "suri": ["suri"],
+  "bishnupur": ["bishnupur"],
+  "arambagh": ["arambagh"],
+  "burdwan": ["burdwan","bardhaman"],
+  "durgapur": ["durgapur"],
+  "imphal": ["imphal"],
+  "shillong": ["shillong"],
+  "aizawl": ["aizawl"],
+  "kohima": ["kohima"],
+  "dimapur": ["dimapur"],
+  "agartala": ["agartala"],
+  "gangtok": ["gangtok"],
+  "itanagar": ["itanagar"],
+  "pasighat": ["pasighat"],
+  "tezpur": ["tezpur"],
+  "jorhat": ["jorhat"],
+  "dibrugarh": ["dibrugarh"],
+  "silchar": ["silchar"],
+  "guwahati": ["guwahati","gauhati"],
+  "dispur": ["dispur"],
+  "anantnag": ["anantnag"],
+  "baramulla": ["baramulla"],
+  "sopore": ["sopore"],
+  "kupwara": ["kupwara"],
+  "pulwama": ["pulwama"],
+  "shopian": ["shopian"],
+  "kulgam": ["kulgam"],
+  "ganderbal": ["ganderbal"],
+  "bandipora": ["bandipora"],
+  "udhampur": ["udhampur"],
+  "kathua": ["kathua"],
+  "rajouri": ["rajouri"],
+  "poonch": ["poonch"],
+  "doda": ["doda"],
+  "kishtwar": ["kishtwar"],
+  "ramban": ["ramban"],
+  "reasi": ["reasi"],
+  "samba": ["samba"],
+  "bemina": ["bemina"],
+  "saura": ["saura","soura"],
+  "kargil": ["kargil"],
+  "leh": ["leh"],
+  "mapusa": ["mapusa"],
+  "margao": ["margao","madgaon"],
+  "vasco": ["vasco","vasco da gama"],
+  "panaji": ["panaji","panjim"],
+  "pondicherry": ["puducherry","pondicherry"],
+  "bhiwani": ["bhiwani"],
+  "rohtak": ["rohtak"],
+  "hisar": ["hisar"],
+  "karnal": ["karnal"],
+  "ambala": ["ambala"],
+  "panipat": ["panipat"],
+  "yamunanagar": ["yamunanagar"],
+  "sonipat": ["sonipat"],
+  "gurugram": ["gurugram","gurgaon"],
+  "faridabad": ["faridabad"],
+  "palwal": ["palwal"],
+  "rewari": ["rewari"],
+  "nuh": ["nuh"],
+  "jind": ["jind"],
+  "kaithal": ["kaithal"],
+  "kurukshetra": ["kurukshetra"],
+  "kaithal": ["kaithal"],
+  "fatehabad": ["fatehabad"],
+  "sirsa": ["sirsa"],
+  "charkhi dadri": ["charkhi dadri"],
+  "mahasamund": ["mahasamund"],
+  "koriya": ["koriya","korea"],
+  "manendragarh": ["manendragarh"],
+  "raigarh": ["raigarh"],
+  "burla": ["burla"],
+  "rourkela": ["rourkela"],
+  "angul": ["angul"],
+  "jharsuguda": ["jharsuguda"],
+  "baripada": ["baripada"],
+  "berhampur": ["berhampur","brahmapur"],
+  "sambalpur": ["sambalpur"],
+  "balasore": ["balasore"],
+  "puri": ["puri"],
+  "bhubaneswar": ["bhubaneswar"],
+  "cuttack": ["cuttack"],
+  "koraput": ["koraput"],
+  "balangir": ["balangir"],
+  "bhawanipatna": ["bhawanipatna"],
+  "kendrapara": ["kendrapara"],
+  "khordha": ["khordha"],
+  "nayagarh": ["nayagarh"],
+  "jeypore": ["jeypore"],
+  "barbil": ["barbil"],
+  "paradip": ["paradip","paradeep"],
+  "dhenkanal": ["dhenkanal"],
+  "keonjhar": ["keonjhar"],
+  "rayagada": ["rayagada"],
+  "malkangiri": ["malkangiri"],
+  "nabarangpur": ["nabarangpur"],
+  "phulbani": ["phulbani"],
+  "boudh": ["boudh"],
+  "sonepur": ["sonepur"],
+  "deogarh": ["deogarh"],
+  "sundargarh": ["sundargarh"],
+  "talcher": ["talcher"],
+  "kamakhyanagar": ["kamakhyanagar"],
+  "jaleswar": ["jaleswar"],
+  "basudevpur": ["basudevpur"],
+  "chandbali": ["chandbali"],
+  "udupi": ["udupi"],
+  "manipal": ["manipal"],
+  "karkala": ["karkala"],
+  "puttur": ["puttur"],
+  "sullia": ["sullia"],
+  "bantwal": ["bantwal"],
+  "moodbidri": ["moodbidri"],
+  "surathkal": ["surathkal"],
+  "hassan": ["hassan"],
+  "chikmagalur": ["chikkamagaluru","chikmagalur"],
+  "madikeri": ["madikeri","kodagu"],
+  "mandya": ["mandya"],
+  "ramanagara": ["ramanagara"],
+  "kolar": ["kolar"],
+  "chikkaballapur": ["chikkaballapur"],
+  "tumakuru": ["tumakuru"],
+  "davangere": ["davangere"],
+  "chitradurga": ["chitradurga"],
+  "shivamogga": ["shivamogga"],
+  "haveri": ["haveri"],
+  "gadag": ["gadag"],
+  "koppal": ["koppal"],
+  "raichur": ["raichur"],
+  "yadgir": ["yadgir"],
+  "kalaburagi": ["kalaburagi"],
+  "bidar": ["bidar"],
+  "vijayapura": ["vijayapura"],
+  "bagalkot": ["bagalkot"],
+  "belagavi": ["belagavi"],
+  "dharwad": ["dharwad"],
+  "hubballi": ["hubballi","hubli"],
+  "karwar": ["karwar"],
+  "sirsi": ["sirsi"],
+  "hosapete": ["hosapete","hospet"],
+  "gangavathi": ["gangavathi","gangavati"],
+  "sindhanur": ["sindhanur"],
+  "bhadravathi": ["bhadravathi"],
+  "sagara": ["sagara","sagar karnataka"],
+  "tiptur": ["tiptur"],
+  "tumu": ["tumu"],
+  "chintamani": ["chintamani"],
+  "gokak": ["gokak"],
+  "saundatti": ["saundatti"],
+  "ramdurg": ["ramdurg"],
+  "bailhongal": ["bailhongal"],
+  "athani": ["athani"],
+  "nipani": ["nipani"],
+  "chikkodi": ["chikkodi"],
+  "sankeshwar": ["sankeshwar"],
+  "mudhol": ["mudhol"],
+  "jamkhandi": ["jamkhandi"],
+  "ilkal": ["ilkal"],
+  "guledgudda": ["guledgudda"],
+  "badami": ["badami"],
+  "bagalkote": ["bagalkote","bagalkot"],
+  "muddebihal": ["muddebihal"],
+  "basavana bagewadi": ["basavana bagewadi"],
+  "indi": ["indi"],
+  "sindagi": ["sindagi"],
+  "afzalpur": ["afzalpur"],
+  "aland": ["aland"],
+  "chincholi": ["chincholi"],
+  "chittapur": ["chittapur"],
+  "sedam": ["sedam"],
+  "shahabad": ["shahabad"],
+  "wadi": ["wadi"],
+  "yadgir": ["yadgir"],
+  "shahapur": ["shahapur"],
+  "surpur": ["surpur"],
+  "shorapur": ["shorapur"],
+  "hunasagi": ["hunasagi"],
+  "lingasugur": ["lingasugur"],
+  "manvi": ["manvi"],
+  "maski": ["maski"],
+  "sindhanur": ["sindhanur"],
+  "devadurga": ["devadurga"],
+  "mantralayam": ["mantralayam"],
+  "raichur": ["raichur"],
+  "gangavathi": ["gangavathi"],
+  "kushtagi": ["kushtagi"],
+  "yelburga": ["yelburga"],
+  "karatagi": ["karatagi"],
+  "kanakapura": ["kanakapura"],
+  "magadi": ["magadi"],
+  "nelamangala": ["nelamangala"],
+  "doddaballapura": ["doddaballapura"],
+  "devanahalli": ["devanahalli"],
+  "hoskote": ["hoskote"],
+  "anehal": ["anekal"],
+  "anekal": ["anekal"],
+  "kengeri": ["kengeri"],
+  "yelahanka": ["yelahanka"],
+  "whitefield": ["whitefield"],
+  "electronic city": ["electronic city"],
+  "jayanagar": ["jayanagar"],
+  "malleshwaram": ["malleshwaram"],
+  "rajajinagar": ["rajajinagar"],
+  "indiranagar": ["indiranagar"],
+  "koramangala": ["koramangala"],
+  "btm layout": ["btm layout"],
+  "hebbal": ["hebbal"],
+  "yeshwanthpur": ["yeshwanthpur","yeshwantpur"],
+  "peenya": ["peenya"],
+  "basavanagudi": ["basavanagudi"],
+  "banashankari": ["banashankari"],
+  "jp nagar": ["jp nagar"],
+  "bommanahalli": ["bommanahalli"],
+  "bommasandra": ["bommasandra"],
+  "sarjapur": ["sarjapur"],
+  "marathahalli": ["marathahalli"],
+  "bellandur": ["bellandur"],
+  "kadugodi": ["kadugodi"],
+  "kr puram": ["kr puram"],
+  "ramamurthy nagar": ["ramamurthy nagar"],
+  "rt nagar": ["rt nagar"],
+  "sadashivanagar": ["sadashivanagar"],
+  "vijayanagar": ["vijayanagar"],
+  "rajajinagar": ["rajajinagar"],
+  "mahalakshmi layout": ["mahalakshmi layout"],
+  "nagarbhavi": ["nagarbhavi"],
+  "kengeri": ["kengeri"],
+  "rr nagar": ["rr nagar","rajarajeshwari nagar"],
+  "uttarahalli": ["uttarahalli"],
+  "banashankari": ["banashankari"],
+  "jayanagar": ["jayanagar"],
+  "basavanagudi": ["basavanagudi"],
+  "chickpet": ["chickpet"],
+  "city market": ["city market"],
+  "shivajinagar": ["shivajinagar"],
+  "commercial street": ["commercial street"],
+  "mg road": ["mg road"],
+  "brigade road": ["brigade road"],
+  "church street": ["church street"],
+  "lavelle road": ["lavelle road"],
+  "residency road": ["residency road"],
+  "richmond town": ["richmond town"],
+  "langford town": ["langford town"],
+  "austin town": ["austin town"],
+  "murphy town": ["murphy town"],
+  "ulsoor": ["ulsoor"],
+  "halasuru": ["halasuru"],
+  "indiranagar": ["indiranagar"],
+  "domlur": ["domlur"],
+  "cv raman nagar": ["cv raman nagar"],
+  "kaggadasapura": ["kaggadasapura"],
+  "mahadevapura": ["mahadevapura"],
+  "whitefield": ["whitefield"],
+  "brookefield": ["brookefield"],
+  "kundalahalli": ["kundalahalli"],
+  "marathahalli": ["marathahalli"],
+  "kadubeesanahalli": ["kadubeesanahalli"],
+  "bellandur": ["bellandur"],
+  "sarjapur": ["sarjapur"],
+  "hsur": ["hosur"],
+  "hosur": ["hosur"],
+  "electronic city": ["electronic city"],
+  "bommasandra": ["bommasandra"],
+  "jigani": ["jigani"],
+  "anekal": ["anekal"],
+  "bidadi": ["bidadi"],
+  "ramanagara": ["ramanagara"],
+  "channapatna": ["channapatna"],
+  "kanakapura": ["kanakapura"],
+  "magadi": ["magadi"],
+  "nelamangala": ["nelamangala"],
+  "doddaballapura": ["doddaballapura"],
+  "devanahalli": ["devanahalli"],
+  "hoskote": ["hoskote"],
+  "malur": ["malur"],
+  "bangarapet": ["bangarapet"],
+  "kolar": ["kolar"],
+  "mulbagal": ["mulbagal"],
+  "srinivaspur": ["srinivaspur"],
+  "chikkaballapur": ["chikkaballapur"],
+  "chidambaram": ["chidambaram"],
+  "kumbakonam": ["kumbakonam"],
+  "mayiladuthurai": ["mayiladuthurai"],
+  "nagapattinam": ["nagapattinam"],
+  "thiruvarur": ["thiruvarur"],
+  "pattukkottai": ["pattukkottai"],
+  "mannargudi": ["mannargudi"],
+  "ariyalur": ["ariyalur"],
+  "perambalur": ["perambalur"],
+  "attur": ["attur"],
+  "mettur": ["mettur"],
+  "idappadi": ["idappadi"],
+  "sankari": ["sankari"],
+  "tiruchengode": ["tiruchengode"],
+  "kumarapalayam": ["kumarapalayam"],
+  "komarapalayam": ["komarapalayam"],
+  "namakkal": ["namakkal"],
+  "rasipuram": ["rasipuram"],
+  "tirupattur": ["tirupattur"],
+  "vaniyambadi": ["vaniyambadi"],
+  "ambur": ["ambur"],
+  "guudiyatham": ["gudiyatham"],
+  "gudiyatham": ["gudiyatham"],
+  "katpadi": ["katpadi"],
+  "arakkonam": ["arakkonam"],
+  "thiruttani": ["thiruttani"],
+  "tiruttani": ["tiruttani"],
+  "chengalpattu": ["chengalpattu"],
+  "madurantakam": ["madurantakam"],
+  "cheyyar": ["cheyyar"],
+  "arani": ["arani"],
+  "polur": ["polur"],
+  "tiruvannamalai": ["tiruvannamalai"],
+  "vandavasi": ["vandavasi"],
+  "tindivanam": ["tindivanam"],
+  "villupuram": ["villupuram"],
+  "panruti": ["panruti"],
+  "neyveli": ["neyveli"],
+  "cuddalore": ["cuddalore"],
+  "chidambaram": ["chidambaram"],
+  "sirkazhi": ["sirkazhi"],
+  "mayiladuthurai": ["mayiladuthurai"],
+  "kumbakonam": ["kumbakonam"],
+  "papanasam": ["papanasam"],
+  "thanjavur": ["thanjavur"],
+  "pattukkottai": ["pattukkottai"],
+  "orathanadu": ["orathanadu"],
+  "mannargudi": ["mannargudi"],
+  "thiruvarur": ["thiruvarur"],
+  "nagapattinam": ["nagapattinam"],
+  "velankanni": ["velankanni"],
+  "karaikal": ["karaikal"],
+  "porayar": ["porayar"],
+  "sirkali": ["sirkali"],
+  "jayankondam": ["jayankondam"],
+  "ariyalur": ["ariyalur"],
+  "sendurai": ["sendurai"],
+  "perambalur": ["perambalur"],
+  "kunnam": ["kunnam"],
+  "vepr": ["veppur"],
+  "veppur": ["veppur"],
+  "turaiyur": ["turaiyur"],
+  "musiri": ["musiri"],
+  "lalgudi": ["lalgudi"],
+  "manachanallur": ["manachanallur"],
+  "srirangam": ["srirangam"],
+  "trichy": ["trichy","tiruchirappalli"],
+  "pudukkottai": ["pudukkottai"],
+  "aranthangi": ["aranthangi"],
+  "ilayangudi": ["ilayangudi"],
+  "sivaganga": ["sivaganga"],
+  "karaikudi": ["karaikudi"],
+  "devakottai": ["devakottai"],
+  "ramanathapuram": ["ramanathapuram"],
+  "paramakudi": ["paramakudi"],
+  "rameswaram": ["rameswaram"],
+  "keelakarai": ["keelakarai"],
+  "mandapam": ["mandapam"],
+  "thoothukudi": ["thoothukudi"],
+  "kovilpatti": ["kovilpatti"],
+  "kayalpattinam": ["kayalpattinam"],
+  "tiruchendur": ["tiruchendur"],
+  "nagercoil": ["nagercoil"],
+  "kanyakumari": ["kanyakumari","cape comorin"],
+  "marthandam": ["marthandam"],
+  "kuzhithurai": ["kuzhithurai"],
+  "padmanabhapuram": ["padmanabhapuram"],
+  "kolachel": ["kolachel"],
+  "tenkasi": ["tenkasi"],
+  "sankarankovil": ["sankarankovil"],
+  "rajapalayam": ["rajapalayam"],
+  "srivilliputhur": ["srivilliputhur"],
+  "sivakasi": ["sivakasi"],
+  "virudhunagar": ["virudhunagar"],
+  "aruppukkottai": ["aruppukkottai"],
+  "sattur": ["sattur"],
+  "madurai": ["madurai"],
+  "melur": ["melur"],
+  "usilampatti": ["usilampatti"],
+  "thirumangalam": ["thirumangalam"],
+  "dindigul": ["dindigul"],
+  "palani": ["palani"],
+  "oddanchatram": ["oddanchatram"],
+  "vedasandur": ["vedasandur"],
+  "batlagundu": ["batlagundu"],
+  "theni": ["theni"],
+  "periyakulam": ["periyakulam"],
+  "bodi": ["bodi","bodinayakanur"],
+  "cumbum": ["cumbum"],
+  "uttamapalayam": ["uttamapalayam"],
+  "kodaikanal": ["kodaikanal"],
+  "ooty": ["ooty","udhagamandalam"],
+  "coonoor": ["coonoor"],
+  "gudalur": ["gudalur"],
+  "kotagiri": ["kotagiri"],
+  "mettupalayam": ["mettupalayam"],
+  "pollachi": ["pollachi"],
+  "udumalaipettai": ["udumalaipettai","udumalpet"],
+  "palladam": ["palladam"],
+  "tiruppur": ["tiruppur"],
+  "avinashi": ["avinashi"],
+  "kangeyam": ["kangeyam"],
+  "dharapuram": ["dharapuram"],
+  "gobichettipalayam": ["gobichettipalayam"],
+  "sathyamangalam": ["sathyamangalam"],
+  "bhavani": ["bhavani"],
+  "erode": ["erode"],
+  "perundurai": ["perundurai"],
+  "anthiyur": ["anthiyur"],
+  "salem": ["salem"],
+  "attur": ["attur"],
+  "mettur": ["mettur"],
+  "omalur": ["omalur"],
+  "edappadi": ["edappadi"],
+  "sankari": ["sankari"],
+  "namakkal": ["namakkal"],
+  "tiruchengode": ["tiruchengode"],
+  "rasipuram": ["rasipuram"],
+  "komarapalayam": ["komarapalayam"],
+  "dharmapuri": ["dharmapuri"],
+  "harur": ["harur"],
+  "palakode": ["palakode"],
+  "pennagaram": ["pennagaram"],
+  "krishnagiri": ["krishnagiri"],
+  "hosur": ["hosur"],
+  "denkanikottai": ["denkanikottai"],
+  "poonamallee": ["poonamallee"],
+  "tambaram": ["tambaram"],
+  "chromepet": ["chromepet"],
+  "pallavaram": ["pallavaram"],
+  "st thomas mount": ["st thomas mount"],
+  "guindy": ["guindy"],
+  "adyar": ["adyar"],
+  "besant nagar": ["besant nagar"],
+  "thiruvanmiyur": ["thiruvanmiyur"],
+  "velachery": ["velachery"],
+  "tambaram": ["tambaram"],
+  "chromepet": ["chromepet"],
+  "pallavaram": ["pallavaram"],
+  "medavakkam": ["medavakkam"],
+  "sholinganallur": ["sholinganallur"],
+  "perumbakkam": ["perumbakkam"],
+  "kelambakkam": ["kelambakkam"],
+  "maraimalai nagar": ["maraimalai nagar"],
+  "chengalpattu": ["chengalpattu"],
+  "mamallapuram": ["mamallapuram","mahabalipuram"],
+  "kalpakkam": ["kalpakkam"],
+  "maduranthakam": ["maduranthakam"],
+  "melmaruvathur": ["melmaruvathur"],
+  "tindivanam": ["tindivanam"],
+  "villupuram": ["villupuram"],
+  "panruti": ["panruti"],
+  "neyveli": ["neyveli"],
+  "cuddalore": ["cuddalore"],
+  "chidambaram": ["chidambaram"],
+  "sirkazhi": ["sirkazhi"],
+  "mayiladuthurai": ["mayiladuthurai"],
+  "kumbakonam": ["kumbakonam"],
+  "thanjavur": ["thanjavur"],
+  "tiruvarur": ["tiruvarur"],
+  "nagapattinam": ["nagapattinam"],
+  "karaikal": ["karaikal"],
+  "pondicherry": ["puducherry","pondicherry"],
+  "cuddalore": ["cuddalore"],
+  "villupuram": ["villupuram"],
+  "tindivanam": ["tindivanam"],
+  "gingee": ["gingee"],
+  "tiruvannamalai": ["tiruvannamalai"],
+  "arani": ["arani"],
+  "vellore": ["vellore"],
+  "katpadi": ["katpadi"],
+  "gudiyatham": ["gudiyatham"],
+  "ambur": ["ambur"],
+  "vaniyambadi": ["vaniyambadi"],
+  "tirupattur": ["tirupattur"],
+  "krishnagiri": ["krishnagiri"],
+  "hosur": ["hosur"],
+  "dharmapuri": ["dharmapuri"],
+  "salem": ["salem"],
+  "namakkal": ["namakkal"],
+  "erode": ["erode"],
+  "tiruppur": ["tiruppur"],
+  "coimbatore": ["coimbatore"],
+  "pollachi": ["pollachi"],
+  "udumalpet": ["udumalpet"],
+  "palani": ["palani"],
+  "dindigul": ["dindigul"],
+  "madurai": ["madurai"],
+  "theni": ["theni"],
+  "virudhunagar": ["virudhunagar"],
+  "sivakasi": ["sivakasi"],
+  "rajapalayam": ["rajapalayam"],
+  "tenkasi": ["tenkasi"],
+  "tirunelveli": ["tirunelveli"],
+  "nagercoil": ["nagercoil"],
+  "thoothukudi": ["thoothukudi"],
+  "ramanathapuram": ["ramanathapuram"],
+  "sivaganga": ["sivaganga"],
+  "karaikudi": ["karaikudi"],
+  "pudukkottai": ["pudukkottai"],
+  "trichy": ["trichy","tiruchirappalli"],
+  "karur": ["karur"],
+  "perambalur": ["perambalur"],
+  "ariyalur": ["ariyalur"],
+  "thanjavur": ["thanjavur"],
+  "kumbakonam": ["kumbakonam"],
+  "mayiladuthurai": ["mayiladuthurai"],
+  "chidambaram": ["chidambaram"],
+  "cuddalore": ["cuddalore"],
+  "villupuram": ["villupuram"],
+  "kanchipuram": ["kanchipuram"],
+  "chengalpattu": ["chengalpattu"],
+  "chennai": ["chennai","madras"],
+  "basaidarapur": ["basaidarapur"],
+  "jhilmil": ["jhilmil"],
+  "okhla": ["okhla"],
+  "dwarka": ["dwarka"],
+  "rohini": ["rohini"],
+  "saket": ["saket"],
+  "patparganj": ["patparganj"],
+  "shalimar bagh": ["shalimar bagh"],
+  "janakpuri": ["janakpuri"],
+  "vasant kunj": ["vasant kunj"],
+  "hauz khas": ["hauz khas"],
+  "karol bagh": ["karol bagh"],
+  "chandni chowk": ["chandni chowk"],
+  "daryaganj": ["daryaganj"],
+  "rajinder nagar": ["rajinder nagar"],
+  "punjabi bagh": ["punjabi bagh"],
+  "paschim vihar": ["paschim vihar"],
+  "uttam nagar": ["uttam nagar"],
+  "nazafgarh": ["najafgarh"],
+  "narela": ["narela"],
+  "bawana": ["bawana"],
+  "nangloi": ["nangloi"],
+  "mundka": ["mundka"],
+  "tikri": ["tikri"],
+  "bahadurgarh": ["bahadurgarh"],
+  "sonipat": ["sonipat"],
+  "panipat": ["panipat"],
+  "karnal": ["karnal"],
+  "kurukshetra": ["kurukshetra"],
+  "ambala": ["ambala"],
+  "panchkula": ["panchkula"],
+  "chandigarh": ["chandigarh"],
+  "mohali": ["mohali"],
+  "zirakpur": ["zirakpur"],
+  "panchkula": ["panchkula"],
+  "kalka": ["kalka"],
+  "pinjore": ["pinjore"],
+  "baddi": ["baddi"],
+  "nahan": ["nahan"],
+  "paonta sahib": ["paonta sahib"],
+  "solan": ["solan"],
+  "shimla": ["shimla"],
+  "mandi": ["mandi"],
+  "kullu": ["kullu"],
+  "manali": ["manali"],
+  "dharamshala": ["dharamshala"],
+  "palampur": ["palampur"],
+  "kangra": ["kangra"],
+  "chamba": ["chamba"],
+  "una": ["una"],
+  "hamirpur": ["hamirpur"],
+  "bilaspur hp": ["bilaspur"],
+  "sundernagar": ["sundernagar"],
+  "joginder nagar": ["joginder nagar"],
+  "keylong": ["keylong"],
+  "recKong peo": ["reckong peo"],
+  "kaza": ["kaza"],
+  "tabo": ["tabo"],
+  "nalagarh": ["nalagarh"],
+  "parwanoo": ["parwanoo"],
+  "kasauli": ["kasauli"],
+  "dagshai": ["dagshai"],
+  "subathu": ["subathu"],
+  "arki": ["arki"],
+  "rajgarh": ["rajgarh"],
+  "chopal": ["chopal"],
+  "rohri": ["rohri"],
+  "theog": ["theog"],
+  "narkanda": ["narkanda"],
+  "rampur bushahr": ["rampur bushahr"],
+  "sarahan": ["sarahan"],
+  "kalpa": ["kalpa"],
+  "sangla": ["sangla"],
+  "chitkul": ["chitkul"],
+  "nako": ["nako"],
+  "tabo": ["tabo"],
+  "kaza": ["kaza"],
+  "losar": ["losar"],
+  "kunzum": ["kunzum"],
+  "batal": ["batal"],
+  "chandra taal": ["chandra taal"],
+  "sissu": ["sissu"],
+  "jahlma": ["jahlma"],
+  "jahlma": ["jahlma"],
+  "keylong": ["keylong"],
+
+  "amalapuram": ["amalapuram"],
+  "gudiwada": ["gudiwada","gudivada"],
+  "nagari": ["nagari"],
+  "malkapatnam": ["malkapatnam"],
+  "noonepalle": ["noonepalle","nandyal"],
+  "east champaran": ["east champaran","motihari"],
+  "moti nagar": ["moti nagar"],
+  "pitampura": ["pitampura"],
+  "shahdara": ["shahdara"],
+  "jaffarpur": ["jaffarpur"],
+  "dabri": ["dabri"],
+  "deesa": ["deesa"],
+  "siddhpur": ["siddhpur"],
+  "morbi": ["morbi","morvi"],
+  "jamkhambhaliya": ["jamkhambhaliya","jamjodhpur"],
+  "junagadh": ["junagadh"],
+  "gandhinagar": ["gandhinagar"],
+  "himmatnagar": ["himmatnagar"],
+  "mehsana": ["mehsana","mahesana"],
+  "patan": ["patan"],
+  "valsad": ["valsad"],
+  "porbandar": ["porbandar","porbander"],
+  "sonepat": ["sonepat","sonipat"],
+  "gandhi nagar": ["gandhi nagar"],
+  "rainawari": ["rainawari"],
+  "chikmagalur": ["chikmagalur","chikkamagaluru","chikmaglr"],
+  "shikaripura": ["shikaripura"],
+  "srikalahasti": ["srikalahasti","sriikalahasthi","srikalahasthi","kalahasti"],
+  "banaskantha": ["banaskantha"],
+  "vadodara": ["vadodara","baroda","vadadora"],
+  "basaidarapur": ["basaidarapur"],
+  "bihta": ["bihta"],
+  "jehanabad": ["jehanabad"],
+  "nawada": ["nawada"],
+  "samastipur": ["samastipur"],
+  "begusarai": ["begusarai"],
+  "khagaria": ["khagaria"],
+  "lakhisarai": ["lakhisarai"],
+  "madhepura": ["madhepura"],
+  "madhubani": ["madhubani"],
+  "muzaffarpur": ["muzaffarpur"],
+  "sitamarhi": ["sitamarhi"],
+  "siwan": ["siwan"],
+  "vaishali": ["vaishali"],
+  "araria": ["araria"],
+  "banka": ["banka"],
+  "sheohar": ["sheohar"],
+  "sasaram": ["sasaram"],
+  "gopalganj": ["gopalganj"],
+  "darbhanga": ["darbhanga"],
+  "purnea": ["purnea","purnia"],
+  "bettiah": ["bettiah"],
+  "bhagalpur": ["bhagalpur"],
+  "nalanda": ["nalanda"],
+  "pawapuri": ["pawapuri"],
+  "biharsharif": ["biharsharif","bihar sharif"],
+  "rajkot": ["rajkot"],
+  "bhavnagar": ["bhavnagar"],
+  "jamnagar": ["jamnagar"],
+  "surat": ["surat"],
+  "valsad": ["valsad"],
+  "vapi": ["vapi"],
+  "navsari": ["navsari"],
+  "bharuch": ["bharuch"],
+  "anand": ["anand"],
+  "nadiad": ["nadiad"],
+  "godhra": ["godhra"],
+  "dahod": ["dahod"],
+  "palanpur": ["palanpur"],
+  "bhuj": ["bhuj"],
+  "gandhidham": ["gandhidham"],
+  "veraval": ["veraval"],
+  "botad": ["botad"],
+  "surendranagar": ["surendranagar"],
+  "amreli": ["amreli"],
+  "junagadh": ["junagadh"],
+  "porbandar": ["porbandar"],
+  "dwarka city": ["dwarka"],
+  "somnath": ["somnath"],
+  "kalol": ["kalol"],
+  "unjha": ["unjha"],
+  "visnagar": ["visnagar"],
+  "modasa": ["modasa"],
+  "idan": ["idan"],
+  "kheda": ["kheda"],
+  "petlad": ["petlad"],
+  "khambhat": ["khambhat"],
+  "dholka": ["dholka"],
+  "viramgam": ["viramgam"],
+  "sanand": ["sanand"],
+  "kalol": ["kalol"],
+  "chhota udepur": ["chhota udepur"],
+  "rajpipla": ["rajpipla"],
+  "vyara": ["vyara"],
+  "bardoli": ["bardoli"],
+  "mandvi": ["mandvi"],
+  "anjar": ["anjar"],
+  "gandhidham": ["gandhidham"],
+  "bhachau": ["bhachau"],
+  "rapar": ["rapar"],
+  "nandurbar": ["nandurbar"],
+  "dhule": ["dhule"],
+  "jalgaon": ["jalgaon"],
+  "bhusawal": ["bhusawal"],
+  "chalisgaon": ["chalisgaon"],
+  "amalner": ["amalner"],
+  "pachora": ["pachora"],
+  "yawal": ["yawal"],
+  "raver": ["raver"],
+  "chopda": ["chopda"],
+  "parola": ["parola"],
+  "erandol": ["erandol"],
+  "dharangaon": ["dharangaon"],
+  "jamner": ["jamner"],
+  "bhadgaon": ["bhadgaon"],
+  "muktainagar": ["muktainagar"],
+  "bodwad": ["bodwad"],
+  "jahlma": ["jahlma"]
+};
+
+// Build lookup tables
+var CITY_CANON = {}; // compact alias -> canonical
+var CITY_SET = {};   // canonical -> 1
+(function buildCityTables(){
+  for(var canon in INDIAN_CITY_DB){
+    if(!Object.prototype.hasOwnProperty.call(INDIAN_CITY_DB, canon)) continue;
+    var key = canon.toLowerCase().replace(/\s+/g,"");
+    CITY_SET[key] = 1;
+    CITY_CANON[key] = key;
+    var aliases = INDIAN_CITY_DB[canon];
+    if(!aliases) continue;
+    for(var i=0;i<aliases.length;i++){
+      var a = String(aliases[i]).toLowerCase().replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim();
+      if(!a) continue;
+      var compact = a.replace(/\s+/g,"");
+      if(compact.length < 3) continue;
+      // Never let a pure state name become a city key
+      if(INDIAN_STATES[compact] && compact !== "delhi" && compact !== "chandigarh" && compact !== "puducherry" && compact !== "pondicherry") continue;
+      CITY_CANON[compact] = key;
+    }
+  }
+  // Ensure NCT/Delhi city mapping
+  CITY_CANON["newdelhi"] = "delhi";
+  CITY_CANON["delhi"] = "delhi";
+  CITY_CANON["nctdelhi"] = "delhi";
+  CITY_SET["delhi"] = 1;
+})();
+
+var CITY_NOISE = {
+  hospital:1,hospitals:1,hosp:1,medical:1,college:1,colleges:1,institute:1,institutes:1,
+  institution:1,centre:1,center:1,research:1,sciences:1,science:1,postgraduate:1,education:1,
+  health:1,healthcare:1,general:1,government:1,govt:1,municipal:1,district:1,private:1,
+  limited:1,pvt:1,ltd:1,memorial:1,trust:1,foundation:1,society:1,academy:1,university:1,
+  school:1,clinic:1,road:1,marg:1,street:1,lane:1,nagar:1,colony:1,sector:1,phase:1,block:1,
+  plot:1,india:1,state:1,campus:1,complex:1,near:1,opp:1,opposite:1,via:1,post:1,office:1,
+  principal:1,gmail:1,com:1,email:1,the:1,and:1,for:1,dr:1,sri:1,shri:1,dept:1,department:1,
+  unit:1,wing:1,annexe:1,annex:1,old:1,new:1,main:1,central:1,national:1,regional:1,all:1,
+  indian:1,super:1,specialty:1,speciality:1,multi:1,home:1,nursing:1,eye:1,heart:1,cancer:1,
+  dental:1,medicals:1,med:1,coll:1,inst:1,instt:1,pg:1,pgimer:1,aiims:1,esic:1,esi:1,
+  railway:1,rly:1,division:1,divisional:1,taluk:1,taluka:1,village:1,town:1,city:1,
+  area:1,civil:1,sadar:1,model:1,associated:1,attached:1,prev:1,previously:1,formerly:1,
+  known:1,name:1,joint:1,nbems:1,dnb:1,diploma:1,course:1,quota:1
+};
+
+var STATE_ABBR = {
+  ap:1, mp:1, up:1, uk:1, ua:1, wb:1, tn:1, ts:1, tg:1, ka:1, kn:1, kl:1, mh:1, gj:1, rj:1,
+  pb:1, hr:1, jh:1, cg:1, ct:1, or:1, od:1, as:1, br:1, hp:1, ga:1, sk:1, ml:1, mn:1, nl:1,
+  tr:1, an:1, dn:1, dd:1, ld:1, py:1, jk:1, la:1, ar:1, mz:1
+};
+
+function compactKey(s){
+  return String(s||"").toLowerCase().replace(/[^a-z]/g,"");
+}
+
+function isStateName(compact){
+  if(!compact) return false;
+  if(INDIAN_STATES[compact]) return true;
+  if(STATE_ABBR[compact]) return true;
+  return false;
+}
+
+function lookupCity(compact){
+  if(!compact || compact.length<3) return "";
+  if(isStateName(compact) && compact!=="delhi" && compact!=="chandigarh" && compact!=="puducherry" && compact!=="pondicherry") return "";
+  return CITY_CANON[compact] || "";
+}
+
+function extractCitiesFromText(text){
+  // Returns array of canonical city keys found in text (order preserved, unique)
+  var found=[], seen={};
+  function add(c){
+    if(!c || seen[c]) return;
+    if(isStateName(c) && c!=="delhi" && c!=="chandigarh" && c!=="puducherry") return;
+    if(!CITY_SET[c] && !CITY_CANON[c]) {
+      // only accept known cities from DB
+      return;
+    }
+    var canon = CITY_CANON[c] || c;
+    if(seen[canon]) return;
+    seen[canon]=1; found.push(canon);
+  }
+  var s=String(text||"").toLowerCase();
+  s=s.replace(/\b\d{6}\b/g," "); // PIN
+  s=s.replace(/[^a-z\s]/g," ");
+  s=s.replace(/\s+/g," ").trim();
+  if(!s) return found;
+  // multi-word scan (up to 3 words)
+  var words=s.split(" ").filter(Boolean);
+  for(var i=0;i<words.length;i++){
+    for(var n=3;n>=1;n--){
+      if(i+n-1>=words.length) continue;
+      var slice=words.slice(i,i+n).join(" ");
+      var compact=compactKey(slice);
+      var city=lookupCity(compact);
+      if(city) add(city);
+    }
+  }
+  return found;
+}
+
+function extractCityTokens(name){
+  // Public API used by manual matching — returns canonical city keys only
+  var ordered=[], seen={};
+  if(!name) return ordered;
+  function addAll(arr){
+    for(var i=0;i<arr.length;i++){
+      if(!seen[arr[i]]){ seen[arr[i]]=1; ordered.push(arr[i]); }
+    }
+  }
+  var raw=String(name);
+  var segments=raw.split(/[,\/|]/).map(function(x){return x.trim();}).filter(Boolean);
+
+  // 1) Scan address-like segments (skip core institute name when possible)
+  var addrStart = segments.length>=2 ? 1 : 0;
+  for(var si=addrStart; si<segments.length; si++){
+    addAll(extractCitiesFromText(segments[si]));
+  }
+  // 2) If nothing found, scan all segments including core (some names embed city)
+  if(!ordered.length){
+    for(var sj=0; sj<segments.length; sj++){
+      addAll(extractCitiesFromText(segments[sj]));
+    }
+  }
+  // 3) Full-string pass
+  if(!ordered.length){
+    addAll(extractCitiesFromText(raw));
+  }
+  return ordered;
+}
+
+function getCityLabels(name){
+  return extractCityTokens(name);
+}
+
+function citySetsOverlap(citiesA, citiesB){
+  if(!citiesA || !citiesB || !citiesA.length || !citiesB.length) return false;
+  var set={};
+  for(var i=0;i<citiesA.length;i++) set[citiesA[i]]=1;
+  for(var j=0;j<citiesB.length;j++){
+    if(set[citiesB[j]]) return true;
+  }
+  return false;
+}
+
+function identifyCityForInstitute(name){
+  var cities=extractCityTokens(name);
+  if(cities.length===1) return { city: cities[0], cities: cities, confidence: "high" };
+  if(cities.length>1){
+    // Prefer the last address-derived city (usually more specific location tail)
+    return { city: cities[cities.length-1], cities: cities, confidence: "medium" };
+  }
+  return { city: null, cities: [], confidence: "none" };
+}
+
+function getAllCsv2InSameCity(choiceInst){
+  var id = identifyCityForInstitute(choiceInst);
+  var out=[], seen={};
+  if(!id.city || id.confidence==="none"){
+    return { cities: id.cities, list: out, confidence: id.confidence, primaryCity: null };
+  }
+  // Strict: only institutes whose extracted cities include the primary city
+  var primary = id.city;
+  for(var i=0;i<csv2Records.length;i++){
+    var rec=csv2Records[i];
+    if(!rec || !rec.institute) continue;
+    if(seen[rec.institute]) continue;
+    var src = extractCityTokens(rec.institute);
+    var hit=false;
+    for(var c=0;c<src.length;c++){
+      if(src[c]===primary){ hit=true; break; }
+    }
+    if(!hit) continue;
+    seen[rec.institute]=1;
+    out.push(rec);
+  }
+  out.sort(function(a,b){ return String(a.institute).localeCompare(String(b.institute)); });
+  return { cities: id.cities, list: out, confidence: id.confidence, primaryCity: primary };
+}
+
+function institutesInCities(cityList, source){
+  // Kept for compatibility; manual panel uses getAllCsv2InSameCity
+  var citySet={};
+  for(var i=0;i<cityList.length;i++) citySet[cityList[i]]=1;
+  var out=[], seen={};
+  if(source==="csv2"){
+    for(var j=0;j<csv2Records.length;j++){
+      var rec=csv2Records[j];
+      var srcCities=extractCityTokens(rec.institute);
+      var hit=false;
+      for(var c=0;c<srcCities.length;c++){ if(citySet[srcCities[c]]){ hit=true; break; } }
+      if(!hit) continue;
+      if(seen[rec.institute]) continue;
+      seen[rec.institute]=1;
+      out.push(rec);
+    }
+  } else {
+    for(var k=0;k<data.length;k++){
+      var inst=data[k][2];
+      if(!inst || seen[inst]) continue;
+      var locs2=extractCityTokens(inst);
+      var hit2=false;
+      for(var c2=0;c2<locs2.length;c2++){ if(citySet[locs2[c2]]){ hit2=true; break; } }
+      if(!hit2) continue;
+      seen[inst]=1;
+      out.push({institute:inst});
+    }
+  }
+  out.sort(function(a,b){ return String(a.institute).localeCompare(String(b.institute)); });
+  return out;
+}
+
+function loadChoices(){
+  try{
+    var raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    var parsed=JSON.parse(raw);
+    if(!Array.isArray(parsed)) return;
+    var seen=new Set(), valid=[];
+    for(var i=0;i<parsed.length;i++){
+      var item=parsed[i];
+      if(!item||typeof item!=="object") continue;
+      var q=String(item.quota||"");
+      var inst=String(item.institute||"");
+      var crs=String(item.course||"");
+      var rk=String(item.rank||"");
+      var key=makeChoiceKey(q,inst,crs);
+      if(seen.has(key)) continue;
+      seen.add(key);
+      valid.push({key:key, rank:rk, quota:q, institute:inst, course:crs});
+    }
+    choices=valid;
+    rebuildKeySet();
+  }catch(e){
+    console.error("Error loading choices:", e);
+  }
+}
+
+function syncUI(){
+  var count=choices.length;
+  $("choiceBadge").textContent=count;
+  $("totalChoicesText").textContent="Total Selected Choices: "+count;
+  $("totalChoicesPlusText").textContent="Total Choices Enriched: "+count;
+  $("exportCsvBtn").disabled=count===0;
+  $("printChoicesBtn").disabled=count===0;
+  $("clearChoicesBtn").disabled=count===0;
+  $("exportPlusCsvBtn").disabled=count===0;
+  $("printPlusBtn").disabled=count===0;
+  render();
+  renderChoices();
+  renderChoicesPlus();
+}
+
+function addChoiceFromRow(rowIdx){
+  var r=data[rowIdx];
+  if(!r) return;
+  var key=makeChoiceKey(r[1], r[2], r[3]);
+  if(choiceKeySet.has(key)) return;
+  choices.push({
+    key:key,
+    rank:r[0],
+    quota:r[1],
+    institute:r[2],
+    course:r[3]
+  });
+  choiceKeySet.add(key);
+  saveChoices();
+  syncUI();
+}
+
+function removeChoiceAt(idx){
+  if(idx<0||idx>=choices.length) return;
+  choices.splice(idx,1);
+  rebuildKeySet();
+  saveChoices();
+  syncUI();
+}
+
+function moveChoice(fromIdx, toIdx){
+  if(fromIdx===toIdx||fromIdx<0||fromIdx>=choices.length||toIdx<0||toIdx>=choices.length) return;
+  var moved=choices.splice(fromIdx,1)[0];
+  choices.splice(toIdx,0,moved);
+  saveChoices();
+  renderChoices();
+  renderChoicesPlus();
+}
+
+function clearAllChoices(){
+  if(!choices.length) return;
+  if(!confirm("Remove all "+choices.length+" selected preferences?")) return;
+  choices=[];
+  choiceKeySet.clear();
+  saveChoices();
+  syncUI();
+}
+
+function switchTab(tab){
+  if(activeTab===tab) return;
+  if(activeTab==="ranking"){
+    savedScrollTop=wrap.scrollTop;
+    closeMenu();
+  }
+  activeTab=tab;
+  var isRank=tab==="ranking";
+  var isChoices=tab==="choices";
+  var isPlus=tab==="choices-plus";
+
+  $("tab-ranking").classList.toggle("active",isRank);
+  $("tab-ranking").setAttribute("aria-selected",isRank?"true":"false");
+  $("tab-choices").classList.toggle("active",isChoices);
+  $("tab-choices").setAttribute("aria-selected",isChoices?"true":"false");
+  $("tab-choices-plus").classList.toggle("active",isPlus);
+  $("tab-choices-plus").setAttribute("aria-selected",isPlus?"true":"false");
+
+  $("page-ranking").classList.toggle("active",isRank);
+  $("page-choices").classList.toggle("active",isChoices);
+  $("page-choices-plus").classList.toggle("active",isPlus);
+
+  if(isRank){
+    wrap.scrollTop=savedScrollTop;
+    render();
+  }else if(isChoices){
+    renderChoices();
+  }else if(isPlus){
+    renderChoicesPlus();
+  }
+}
+
+$("tab-ranking").addEventListener("click",function(){switchTab("ranking");});
+$("tab-choices").addEventListener("click",function(){switchTab("choices");});
+$("tab-choices-plus").addEventListener("click",function(){switchTab("choices-plus");});
+$("backToRankingBtn").addEventListener("click",function(){switchTab("ranking");});
+$("backToRankingFromPlusBtn").addEventListener("click",function(){switchTab("ranking");});
+
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+  var rows=[], row=[], field="", i=0, n=text.length, inQ=false, c;
+  while(i<n){
+    c=text[i];
+    if(inQ){
+      if(c==='"'){
+        if(text[i+1]==='"'){field+='"';i+=2;continue;}
+        inQ=false;i++;continue;
+      }
+      field+=c;i++;continue;
+    }
+    if(c==='"'){inQ=true;i++;continue;}
+    if(c===','){row.push(field);field="";i++;continue;}
+    if(c==='\r'||c==='\n'){
+      if(c==='\r'&&text[i+1]==='\n')i++;
+      row.push(field);field="";rows.push(row);row=[];i++;continue;
+    }
+    field+=c;i++;continue;
+  }
+  if(field!==""||row.length){row.push(field);rows.push(row);}
+  return rows.filter(function(r){return !(r.length===1&&r[0]==="");});
+}
+
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+function load1CsvText(text){
+  try{
+    var rows=parseCSV(text);
+    if(!rows.length){alert("The CSV file is empty.");return;}
+    var head=rows.shift();
+    headers=[0,1,2,3].map(function(i){return (head[i]!==undefined&&head[i]!=="")?head[i]:headers[i];});
+    data=rows.map(function(r){return [r[0]||"",r[1]||"",r[2]||"",r[3]||""];});
+    lowered=data.map(function(r){return r.map(function(v){return v.toLowerCase();});});
+    sel=[null,null,null,null];
+    var coll0=new Intl.Collator(undefined,{sensitivity:"base",numeric:true});
+    for(var c=0;c<4;c++){
+      var st=new Set();for(var k=0;k<data.length;k++)st.add(data[k][c]);
+      uniq[c]=Array.from(st).sort(function(a,b){return coll0.compare(a,b);});
+    }
+    $("cThRank").textContent=headers[0];
+    $("cThQuota").textContent=headers[1];
+    $("cThInst").textContent=headers[2];
+    $("cThCourse").textContent=headers[3];
+
+    $("cPThRank").textContent=headers[0];
+    $("cPThQuota").textContent=headers[1];
+    $("cPThInst").textContent=headers[2];
+    $("cPThCourse").textContent=headers[3];
+
+    buildHeader();
+    $("loadPrompt").classList.remove("show");
+    applyAll();
+  }catch(e){
+    console.error("Error loading 1.csv:", e);
+    alert("Error parsing 1.csv: " + e.message);
+  }
+}
+
+function load2CsvText(text){
+  try{
+    var rows=parseCSV(text);
+    if(!rows.length){
+      if($("csv2StatusHint")) $("csv2StatusHint").textContent="";
+      csv2Records=[];
+      csv2Loaded=false;
+      renderChoicesPlus();
+      return;
+    }
+    var head=rows.shift();
+    // 2.csv format: Institute, Stipend, Bond, Penalty (robust header detection)
+    var instIdx=0, stipIdx=1, bondIdx=2, penIdx=3;
+    if(head && head.length){
+      for(var i=0; i<head.length; i++){
+        var h=String(head[i]||"").toLowerCase().replace(/^\ufeff/,"");
+        if(h.includes("institute")||h.includes("college")||h.includes("hospital")||h==="institute") instIdx=i;
+        else if(h.includes("stipend")) stipIdx=i;
+        else if(h.includes("bond")) bondIdx=i;
+        else if(h.includes("penalty")||h.includes("fine")) penIdx=i;
+      }
+    }
+
+    csv2Records=rows.map(function(r){
+      var inst=r[instIdx]!==undefined?String(r[instIdx]):"";
+      var stipend=r[stipIdx]!==undefined?String(r[stipIdx]):"";
+      var bond=r[bondIdx]!==undefined?String(r[bondIdx]):"";
+      var penalty=r[penIdx]!==undefined?String(r[penIdx]):"";
+      return {
+        institute:inst,
+        stipend:stipend,
+        bond:bond,
+        penalty:penalty,
+        _cache:null
+      };
+    }).filter(function(rec){ return rec.institute && rec.institute.trim(); });
+
+    // Precompute tokens for performance
+    for(var i=0;i<csv2Records.length;i++){
+      csv2Records[i]._cache = analyzeInstitute(csv2Records[i].institute);
+    }
+
+    csv2Loaded=true;
+    if($("csv2StatusHint")) $("csv2StatusHint").textContent="";
+    renderChoicesPlus();
+  }catch(e){
+    console.error("Error parsing 2.csv:", e);
+    if($("csv2StatusHint")) $("csv2StatusHint").textContent="";
+    csv2Records=[];
+    csv2Loaded=false;
+  }
+}
+
+function loadFile1(f){
+  if(!f) return;
+  var rd=new FileReader();
+  rd.onload=function(){load1CsvText(String(rd.result));};
+  rd.readAsText(f,"utf-8");
+}
+
+function loadFile2(f){
+  if(!f) return;
+  var rd=new FileReader();
+  rd.onload=function(){load2CsvText(String(rd.result));};
+  rd.readAsText(f,"utf-8");
+}
+
+function autoLoad(){
+  function fail(){$("loadPrompt").classList.add("show");}
+  if(location.protocol==="file:"){
+    try{
+      var x=new XMLHttpRequest();
+      x.open("GET","1.csv",true);
+      x.onload=function(){ if(x.responseText&&x.responseText.length) load1CsvText(x.responseText); else fail(); };
+      x.onerror=fail;
+      x.send();
+    }catch(e){fail();}
+    try{
+      var x2=new XMLHttpRequest();
+      x2.open("GET","2.csv",true);
+      x2.onload=function(){ if(x2.responseText&&x2.responseText.length) load2CsvText(x2.responseText); };
+      x2.send();
+    }catch(e){}
+    return;
+  }
+  fetch("1.csv").then(function(r){if(!r.ok)throw 0;return r.text();}).then(load1CsvText).catch(fail);
+  fetch("2.csv").then(function(r){if(r.ok)return r.text();}).then(function(txt){if(txt)load2CsvText(txt);}).catch(function(){});
+}
+
+/* ---------- Robust India-wide Institute Matching Engine ---------- */
+/*
+  Multi-stage matching (no fixed city whitelist):
+  1) Exact / near-exact normalized name
+  2) High distinctive-token overlap + location agreement
+  3) First meaningful word + location / first-3-letter fallback
+  4) Strong fuzzy (token subset + location) for partial names
+  Location is inferred dynamically from name segments (comma parts, trailing tokens).
+*/
+var MATCH_STOP = {
+  of:1,and:1,the:1,for:1,at:1,in:1,on:1,by:1,a:1,an:1,to:1,from:1,with:1,as:1,or:1,is:1,are:1,
+  was:1,were:1,be:1,been:1,being:1,dr:1,mr:1,mrs:1,ms:1,shri:1,sri:1,late:1,via:1,near:1,
+  road:1,marg:1,street:1,lane:1,plot:1,no:1,number:1,block:1,sector:1,phase:1,floor:1,
+  post:1,office:1,pin:1,pincode:1,india:1,state:1,district:1,taluk:1,taluka:1,village:1,
+  prev:1,previously:1,known:1,name:1,formerly:1,joint:1,associated:1,attached:1
+};
+var MATCH_GENERIC = {
+  hospital:1,hospitals:1,medical:1,college:1,colleges:1,institute:1,institutes:1,
+  institution:1,centre:1,center:1,centers:1,centres:1,research:1,sciences:1,science:1,
+  postgraduate:1,graduate:1,education:1,health:1,healthcare:1,general:1,government:1,
+  govt:1,municipal:1,corporation:1,private:1,limited:1,pvt:1,ltd:1,super:1,specialty:1,
+  speciality:1,superspecialty:1,multispecialty:1,multi:1,speciality:1,clinic:1,nursing:1,
+  home:1,trust:1,foundation:1,society:1,academy:1,school:1,university:1,dept:1,department:1,
+  unit:1,wing:1,campus:1,complex:1,building:1,annexe:1,annex:1,new:1,old:1,main:1,
+  central:1,national:1,regional:1,all:1,india:1,indian:1
+};
+var MATCH_WEAK_FIRST = {
+  government:1, district:1, area:1, civil:1, general:1, state:1, central:1, municipal:1,
+  city:1, town:1, rural:1, urban:1, public:1, private:1, model:1, new:1, old:1, sub:1
+};
+var MATCH_ABBR = {
+  hosp:"hospital", hos:"hospital", hospital:"hospital", hospitals:"hospital",
+  med:"medical", medical:"medical",
+  coll:"college", col:"college", college:"college",
+  inst:"institute", instt:"institute", institute:"institute",
+  cent:"centre", center:"centre", centre:"centre",
+  govt:"government", gov:"government", government:"government",
+  gen:"general", general:"general",
+  dist:"district", district:"district",
+  pg:"postgraduate", pgi:"pgi", pgimer:"pgimer",
+  mc:"medical", gmc:"government",
+  ss:"superspecialty", superspec:"superspecialty",
+  mem:"memorial", memorial:"memorial",
+  rly:"railway", railway:"railway",
+  esic:"esic", esi:"esi",
+  aiims:"aiims", vmmc:"vmmc", abvims:"abvims", rml:"rml",
+  nbems:"nbems", dnb:"dnb",
+  sd:"sub", sub:"sub", div:"divisional",
+  hq:"headquarters", headquarter:"headquarters", headquarters:"headquarters",
+  mh:"mental", ihms:"institute"
+};
+
+function matchExpandToken(t){
+  return MATCH_ABBR[t] || t;
+}
+
+function matchNormalizeRaw(s){
+  if(!s) return "";
+  s = String(s).toLowerCase();
+  s = s.replace(/&/g, " and ");
+  s = s.replace(/[''`]/g, "");
+  s = s.replace(/[^\w\s]/g, " ");
+  s = s.replace(/\b\d{6}\b/g, " "); // pin codes
+  s = s.replace(/\b\d+\b/g, " ");   // other pure numbers
+  s = s.replace(/\s+/g, " ").trim();
+  return s;
+}
+
+function matchTokenize(s){
+  var raw = matchNormalizeRaw(s);
+  if(!raw) return [];
+  var parts = raw.split(" ");
+  var out = [];
+  for(var i=0;i<parts.length;i++){
+    var t = parts[i];
+    if(!t || t.length<2) continue;
+    if(MATCH_STOP[t]) continue;
+    t = matchExpandToken(t);
+    if(MATCH_STOP[t]) continue;
+    out.push(t);
+  }
+  return out;
+}
+
+function matchDistinctive(tokens){
+  var d = [];
+  for(var i=0;i<tokens.length;i++){
+    if(!MATCH_GENERIC[tokens[i]] && tokens[i].length>=3) d.push(tokens[i]);
+  }
+  return d;
+}
+
+function matchLocationHints(name){
+  // Dynamic location extraction primarily from address-like comma segments (not the core name)
+  var hints = {};
+  if(!name) return hints;
+  var segments = String(name).split(/[,\/|]/);
+  // Core is segment 0; location usually lives in later segments
+  var start = segments.length >= 2 ? 1 : 0;
+  // Prefer the last few segments
+  start = Math.max(start, segments.length - 4);
+  for(var i=start;i<segments.length;i++){
+    if(i===0 && segments.length>1) continue; // skip core name when address exists
+    var toks = matchTokenize(segments[i]);
+    for(var j=0;j<toks.length;j++){
+      var t = toks[j];
+      if(t.length>=3 && !MATCH_GENERIC[t]) hints[t]=1;
+    }
+  }
+  // If no comma segments yielded locations, fall back to last tokens of the full string
+  if(Object.keys(hints).length===0){
+    var all = matchTokenize(name);
+    for(var k=Math.max(0, all.length-3); k<all.length; k++){
+      var w = all[k];
+      if(w.length>=3 && !MATCH_GENERIC[w]) hints[w]=1;
+    }
+  }
+  return hints;
+}
+
+
+// Common Indian medical institute acronym expansions (bidirectional matching aid)
+var MATCH_ALIASES = {
+  igims: ["indira","gandhi","institute","medical","sciences"],
+  vmmc: ["vardhman","mahavir","medical","college","safdarjung"],
+  abvims: ["atal","bihari","vajpayee","institute","medical","sciences","rml"],
+  pgimer: ["postgraduate","institute","medical","education","research"],
+  aiims: ["all","india","institute","medical","sciences"],
+  jipmer: ["jawaharlal","institute","postgraduate","medical","education","research"],
+  sgpgi: ["sanjay","gandhi","postgraduate","institute"],
+  kgmu: ["king","george","medical","university"],
+  mamc: ["maulana","azad","medical","college"],
+  lhmc: ["lady","hardinge","medical","college"],
+  ucms: ["university","college","medical","sciences"],
+  vmmc: ["vardhman","mahavir","safdarjung"],
+  rml: ["ram","manohar","lohia"],
+  ihms: ["institute","health","medical","sciences"],
+  trihms: ["tomo","riba","institute","health","medical","sciences"]
+};
+
+function analyzeInstitute(name){
+  var tokens = matchTokenize(name);
+  var locs = matchLocationHints(name);
+  // Core name = text before the first comma (institute identity), not the address tail
+  var corePart = String(name||"").split(",")[0];
+  var coreTokens = matchTokenize(corePart);
+  var coreDist = matchDistinctive(coreTokens);
+  // Full distinctive tokens excluding pure location-only words when possible
+  var dist = matchDistinctive(tokens).filter(function(tok){
+    // keep if it appears in core name OR is long unique (>=6) even if also a place
+    if(coreTokens.indexOf(tok) >= 0) return true;
+    if(tok.length >= 6) return true;
+    if(locs[tok] && coreTokens.indexOf(tok) < 0) return false;
+    return true;
+  });
+  // Expand known acronyms into token sets for better matching (IGIMS, VMMC, …)
+  for(var ai=0; ai<coreTokens.length; ai++){
+    var al = MATCH_ALIASES[coreTokens[ai]];
+    if(al){
+      for(var aj=0; aj<al.length; aj++){
+        if(coreTokens.indexOf(al[aj])<0) coreTokens.push(al[aj]);
+        if(al[aj].length>=3 && !MATCH_GENERIC[al[aj]] && coreDist.indexOf(al[aj])<0) coreDist.push(al[aj]);
+      }
+    }
+  }
+  // Also: if core has multiple distinctive words, add their acronym as a synthetic token
+  if(coreDist.length >= 2){
+    var acr = coreDist.map(function(w){return w[0];}).join("");
+    if(acr.length >= 3 && coreTokens.indexOf(acr)<0) coreTokens.push(acr);
+  }
+
+  // Prefer first distinctive token from CORE name only (never a pure location token)
+  var firstDist = "";
+  if(coreDist.length) firstDist = coreDist[0];
+  else if(coreTokens.length){
+    for(var fi=0; fi<coreTokens.length; fi++){
+      if(!MATCH_GENERIC[coreTokens[fi]]){ firstDist = coreTokens[fi]; break; }
+    }
+    if(!firstDist) firstDist = coreTokens[0];
+  }
+  // Do not fall back to address/location tokens for firstDist
+  var first3 = firstDist ? firstDist.slice(0,3) : "";
+  var normJoined = tokens.join(" ");
+  var coreJoined = coreTokens.join(" ");
+  return {
+    name: name,
+    tokens: tokens,
+    tokenSet: (function(){var o={}; for(var i=0;i<tokens.length;i++) o[tokens[i]]=1; for(var j=0;j<coreTokens.length;j++) o[coreTokens[j]]=1; return o;})(),
+    coreTokens: coreTokens,
+    coreDist: coreDist,
+    coreDistSet: (function(){var o={}; for(var i=0;i<coreDist.length;i++) o[coreDist[i]]=1; return o;})(),
+    dist: dist,
+    distSet: (function(){var o={}; for(var i=0;i<dist.length;i++) o[dist[i]]=1; return o;})(),
+    locs: locs,
+    firstDist: firstDist,
+    first3: first3,
+    normJoined: normJoined,
+    coreJoined: coreJoined
+  };
+}
+
+function countOverlap(setA, arrB){
+  var n=0;
+  for(var i=0;i<arrB.length;i++) if(setA[arrB[i]]) n++;
+  return n;
+}
+
+function locationOverlapScore(locsA, locsB, excludeSet){
+  var n=0;
+  for(var k in locsA){
+    if(excludeSet && excludeSet[k]) continue; // don't count shared name tokens as "location"
+    if(locsB[k]) n++;
+  }
+  return n;
+}
+
+function matchChoiceWith2Csv(choiceInst){
+  if(!csv2Records.length || !choiceInst) return null;
+
+  var target = analyzeInstitute(choiceInst);
+  if(!target.tokens.length) return null;
+
+  var best = null;
+  var bestScore = -1;
+  var bestRule = "";
+  var secondScore = -1;
+
+  for(var i=0; i<csv2Records.length; i++){
+    var item = csv2Records[i];
+    var src = item._cache || (item._cache = analyzeInstitute(item.institute));
+    if(!src.tokens.length) continue;
+
+    var coreInter = countOverlap(target.coreDistSet, src.coreDist);
+    // Also allow core distinctive tokens to match against full src distinctive
+    var coreToSrc = countOverlap(target.coreDistSet, src.dist);
+    var distInter = Math.max(coreInter, coreToSrc, countOverlap(target.distSet, src.dist));
+    var tokInter = countOverlap(target.tokenSet, src.tokens);
+    // Location overlap ignores tokens that are part of either core name (prevents "gandhi" counting as place)
+    var locExclude = {};
+    for(var ei=0; ei<target.coreDist.length; ei++) locExclude[target.coreDist[ei]]=1;
+    for(var ej=0; ej<src.coreDist.length; ej++) locExclude[src.coreDist[ej]]=1;
+    var locOv = locationOverlapScore(target.locs, src.locs, locExclude);
+    var firstWordSame = target.firstDist && src.firstDist && target.firstDist === src.firstDist;
+    var first3Same = target.first3 && src.first3 && target.first3.length>=3 && target.first3 === src.first3;
+
+    // Stage 1: near-exact normalized (very high confidence)
+    if(target.normJoined && target.normJoined === src.normJoined){
+      var s1 = 100 + locOv;
+      if(s1 > bestScore){ secondScore=bestScore; bestScore=s1; best=item; bestRule="Exact normalized name"; }
+      else if(s1 > secondScore) secondScore=s1;
+      continue;
+    }
+    // Exact core name only if core has real identity (distinctive token) OR shared location
+    if(target.coreJoined && target.coreJoined === src.coreJoined && target.coreJoined.length > 5){
+      var coreHasIdentity = target.coreDist.length > 0 && target.coreDist.some(function(x){return x.length>=4;});
+      if(coreHasIdentity || locOv >= 1){
+        var s1b = 90 + locOv*5 + (coreHasIdentity?10:0);
+        if(s1b > bestScore){ secondScore=bestScore; bestScore=s1b; best=item; bestRule="Exact core name"; }
+        else if(s1b > secondScore) secondScore=s1b;
+        continue;
+      }
+    }
+
+    // Stage 2: strong CORE distinctive token overlap (avoids city-only false positives)
+    var score = 0;
+    var rule = "";
+
+    if(coreInter >= 2 || coreToSrc >= 2){
+      var di = Math.max(coreInter, coreToSrc);
+      score = 50 + di*12 + locOv*8 + (firstWordSame?10:0) + tokInter;
+      rule = "Distinctive tokens (" + di + ") + location";
+    } else if(coreInter === 1 || coreToSrc === 1){
+      var sharedCore = (target.coreDist.filter(function(x){ return src.coreDistSet[x] || src.distSet[x]; })[0]) || "";
+      // One distinctive CORE token — demand location agreement OR first-word match OR long unique token
+      if(sharedCore.length >= 8 && locOv >= 1){
+        score = 44 + locOv*6 + (firstWordSame?8:0) + tokInter;
+        rule = "Unique name token (" + sharedCore + ") + location";
+      } else if(sharedCore.length >= 8 && firstWordSame){
+        score = 42 + tokInter;
+        rule = "Unique name token (" + sharedCore + ")";
+      } else if(sharedCore.length >= 6 && locOv >= 1){
+        score = 40 + locOv*6 + (firstWordSame?8:0) + tokInter;
+        rule = "Unique name token (" + sharedCore + ") + location";
+      } else if(locOv >= 1 && firstWordSame && sharedCore.length >= 3){
+        score = 38 + locOv*8 + 10 + tokInter*2;
+        rule = "Distinctive token + first word (" + target.firstDist + ") + location";
+      } else if(locOv >= 1 && sharedCore.length >= 5){
+        score = 34 + locOv*8 + tokInter*2;
+        rule = "Distinctive token + location (" + Object.keys(target.locs).filter(function(k){return src.locs[k];}).slice(0,2).join(",") + ")";
+      } else if(firstWordSame && sharedCore.length >= 5 && locOv >= 1){
+        score = 33 + tokInter*2;
+        rule = "Distinctive token + first word (" + target.firstDist + ")";
+      }
+    }
+
+    // Stage 3: first meaningful word + location (covers reordered / abbreviated names)
+    // Ignore weak/generic first words (government, district, area, …)
+    if(score < 30 && firstWordSame && locOv >= 1 && target.firstDist && !MATCH_WEAK_FIRST[target.firstDist] && !MATCH_GENERIC[target.firstDist]){
+      var s3 = 32 + locOv*8 + tokInter*2;
+      if(s3 > score){
+        score = s3;
+        rule = "First word (" + target.firstDist + ") + location";
+      }
+    }
+
+    // Stage 4: first-3-letter of distinctive name + location (spelling variants)
+    // Require reasonably long, non-weak first word to avoid "set"/"gov" style collisions
+    if(score < 28 && first3Same && locOv >= 1 && target.firstDist.length >= 5 &&
+       !MATCH_WEAK_FIRST[target.firstDist] && !MATCH_GENERIC[target.firstDist]){
+      var s4 = 28 + locOv*6 + tokInter;
+      if(s4 > score){
+        score = s4;
+        rule = "First-3 letters (" + target.first3 + ") + location";
+      }
+    }
+
+    // Stage 5: high token Jaccard when both sides have few distinctive tokens (short names)
+    if(score < 25 && tokInter >= 2){
+      var union = {};
+      for(var a=0;a<target.tokens.length;a++) union[target.tokens[a]]=1;
+      for(var b=0;b<src.tokens.length;b++) union[src.tokens[b]]=1;
+      var uSize = Object.keys(union).length;
+      var jacc = tokInter / Math.max(1, uSize);
+      if(jacc >= 0.5 && (locOv >= 1 || firstWordSame)){
+        var s5 = 25 + jacc*20 + locOv*5;
+        if(s5 > score){
+          score = s5;
+          rule = "Name similarity (" + Math.round(jacc*100) + "%) + location";
+        }
+      }
+    }
+
+    // Stage 6: containment — only when both sides have real core identity tokens
+    if(score < 30 && coreInter >= 1 && locOv >= 1 && target.coreDist.length >= 1 && target.coreDist.length <= 4 && src.coreDist.length >= 1 && src.coreDist.length <= 6){
+      var coverT = coreInter / Math.max(1, target.coreDist.length);
+      var coverS = coreInter / Math.max(1, src.coreDist.length);
+      if((coverT >= 0.66 || coverS >= 0.66) && (firstWordSame || (target.coreDist[0]&&target.coreDist[0].length>=5))){
+        var s6 = 30 + coreInter*8 + locOv*6;
+        if(s6 > score){
+          score = s6;
+          rule = "Partial name containment";
+        }
+      }
+    }
+
+    if(score > bestScore){
+      secondScore = bestScore;
+      bestScore = score;
+      best = item;
+      bestRule = rule || "Token overlap";
+    } else if(score > secondScore){
+      secondScore = score;
+    }
+  }
+
+  // Confidence threshold — avoid weak random matches
+  if(!best || bestScore < 32) return null;
+
+  // Ambiguous if two close high scores without clear winner
+  var status = "matched";
+  if(secondScore > 0 && bestScore - secondScore < 8 && bestScore < 60){
+    status = "ambiguous";
+  }
+
+  return {
+    item: best,
+    rule: bestRule + " [score " + Math.round(bestScore) + "]",
+    status: status,
+    score: bestScore
+  };
+}
+
+function buildHeader(){
+  headsEl.innerHTML="";filtersEl.innerHTML="";
+  headers.forEach(function(h,i){
+    var d=document.createElement("div");d.className="hcell";d.dataset.i=i;
+    d.innerHTML='<span></span><span class="arrow">▲▼</span>';
+    d.firstChild.textContent=h;
+    d.addEventListener("click",function(){toggleSort(i);});
+    headsEl.appendChild(d);
+    var f=document.createElement("div");f.className="fcell";
+    if(i===2||i===3){
+      var inp=document.createElement("input");inp.type="search";
+      inp.placeholder=i===2?"Search institute…":"Search course…";
+      inp.value=colFilters[i];inp.autocomplete="off";inp.dataset.i=i;
+      inp.addEventListener("input",debounce(function(){colFilters[i]=inp.value;applyAll();},120));
+      f.appendChild(inp);
+    }
+    if(i===1||i===3){
+      var dd=document.createElement("button");dd.type="button";dd.className="dd";dd.textContent="▾";dd.title="Choose values";dd.dataset.i=i;
+      dd.addEventListener("click",function(e){e.stopPropagation();openMenu(i,dd);});
+      f.appendChild(dd);
+    }
+    if(i===3){
+      var clear=document.createElement("button");clear.type="button";clear.className="clearBtn";clear.textContent="Clear";
+      clear.title="Clear filters and sorting";clear.addEventListener("click",clearAll);
+      f.appendChild(clear);
+    }
+    filtersEl.appendChild(f);
+  });
+
+  var actH=document.createElement("div");
+  actH.className="hcell noSort";
+  actH.textContent="Select";
+  headsEl.appendChild(actH);
+
+  var actF=document.createElement("div");
+  actF.className="fcell";
+  filtersEl.appendChild(actF);
+
+  updateArrows();
+}
+function updateArrows(){
+  var cells=headsEl.children;
+  for(var i=0;i<4;i++){
+    var on=(i===sortCol&&sortDir!==0);
+    cells[i].classList.toggle("sorted",on);
+    cells[i].lastChild.textContent=on?(sortDir===1?"▲":"▼"):"▲▼";
+  }
+}
+function toggleSort(i){
+  if(sortCol!==i){sortCol=i;sortDir=1;}
+  else if(sortDir===1){sortDir=-1;}
+  else if(sortDir===-1){sortDir=0;sortCol=-1;}
+  updateArrows();applyAll();
+}
+function debounce(fn,ms){var t;return function(){clearTimeout(t);t=setTimeout(fn,ms);};}
+
+function passes(i,skip,cf){
+  var L=lowered[i],r=data[i];
+  for(var c=0;c<4;c++){
+    if(c===skip)continue;
+    if(cf[c]&&L[c].indexOf(cf[c])<0)return false;
+    if(sel[c]&&!sel[c].has(r[c]))return false;
+  }
+  return true;
+}
+function ctx(){return {cf:colFilters.map(function(v){return v.trim().toLowerCase();})};}
+function applyAll(){
+  var x=ctx(),out=[];
+  for(var i=0;i<data.length;i++){ if(passes(i,-1,x.cf)) out.push(i); }
+  if(sortDir!==0&&sortCol>=0){
+    var c2=sortCol, d=sortDir;
+    if(c2===0){
+      out.sort(function(a,b){
+        var x=data[a][0],y=data[b][0],nx=parseFloat(x),ny=parseFloat(y);
+        var xn=isNaN(nx),yn=isNaN(ny);
+        if(xn&&yn){var s=x.localeCompare(y);return s?s*d:a-b;}
+        if(xn)return 1;
+        if(yn)return -1;
+        return (nx-ny)*d||a-b;
+      });
+    }else{
+      var coll=new Intl.Collator(undefined,{sensitivity:"base",numeric:true});
+      out.sort(function(a,b){return coll.compare(data[a][c2],data[b][c2])*d||a-b;});
+    }
+  }
+  view=out;
+  $("rowCounter").textContent=data.length?(view.length.toLocaleString()+" / "+data.length.toLocaleString()+" rows"):"";
+  updateDD();
+  body.style.height=Math.max(view.length*ROW_H,0)+"px";
+  wrap.scrollTop=0;
+  savedScrollTop=0;
+  render();
+}
+
+var raf=0;
+function render(){
+  if(view.length===0){
+    body.style.height="auto";
+    body.innerHTML='<div class="empty">'+(data.length?"No records match the current filters.":"No data loaded.")+'</div>';
+    return;
+  }
+  var hdrH=$("hdr").offsetHeight;
+  var top=Math.max(0,wrap.scrollTop-hdrH);
+  var first=Math.max(0,Math.floor(top/ROW_H)-BUFFER);
+  var count=Math.ceil(wrap.clientHeight/ROW_H)+BUFFER*2;
+  var last=Math.min(view.length,first+count);
+  var html=[];
+  for(var v=first;v<last;v++){
+    var rowIdx=view[v];
+    var r=data[rowIdx];
+    var key=makeChoiceKey(r[1],r[2],r[3]);
+    var isAdded=choiceKeySet.has(key);
+    html.push('<div class="row cols" style="top:'+(v*ROW_H)+'px">'+
+      '<div class="cell num" title="'+esc(r[0])+'">'+esc(r[0])+'</div>'+
+      '<div class="cell" title="'+esc(r[1])+'">'+esc(r[1])+'</div>'+
+      '<div class="cell" title="'+esc(r[2])+'">'+esc(r[2])+'</div>'+
+      '<div class="cell" title="'+esc(r[3])+'">'+esc(r[3])+'</div>'+
+      '<div class="cell act"><button type="button" class="addBtn'+(isAdded?' added':'')+'" data-idx="'+rowIdx+'"'+(isAdded?' disabled':'')+'>'+(isAdded?'ADDED':'ADD')+'</button></div>'+
+    '</div>');
+  }
+  body.innerHTML=html.join("");
+}
+
+body.addEventListener("click",function(e){
+  var btn=e.target.closest(".addBtn");
+  if(!btn||btn.disabled) return;
+  var rowIdx=parseInt(btn.dataset.idx,10);
+  if(!isNaN(rowIdx)) addChoiceFromRow(rowIdx);
+});
+
+wrap.addEventListener("scroll",function(){
+  savedScrollTop=wrap.scrollTop;
+  if(!raf)raf=requestAnimationFrame(function(){raf=0;render();});
+});
+window.addEventListener("resize",function(){render();});
+
+function renderChoices(){
+  var tbody=$("choicesBody");
+  $("printMeta").textContent="Total Preferences: "+choices.length+" | Generated: "+new Date().toLocaleString();
+  if(!choices.length){
+    tbody.innerHTML='<tr><td colspan="6" class="empty">No preferences selected yet. Switch to the <b>Ranking</b> tab and click <b>ADD</b> on any row.</td></tr>';
+    return;
+  }
+  var html=[];
+  for(var i=0;i<choices.length;i++){
+    var c=choices[i];
+    var prefNum=i+1;
+    html.push(
+      '<tr data-i="'+i+'">'+
+        '<td class="cPref"><span class="dragHandle" title="Preference Order">☰</span>'+prefNum+'</td>'+
+        '<td class="cRank" title="'+esc(c.rank)+'">'+esc(c.rank)+'</td>'+
+        '<td class="cQuota" title="'+esc(c.quota)+'">'+esc(c.quota)+'</td>'+
+        '<td class="cInst" title="'+esc(c.institute)+'">'+esc(c.institute)+'</td>'+
+        '<td class="cCourse" title="'+esc(c.course)+'">'+esc(c.course)+'</td>'+
+        '<td class="cAct">'+
+          '<button type="button" class="miniBtn moveUpBtn" data-i="'+i+'" title="Move Up"'+(i===0?' disabled':'')+'>▲</button>'+
+          '<button type="button" class="miniBtn moveDownBtn" data-i="'+i+'" title="Move Down"'+(i===choices.length-1?' disabled':'')+'>▼</button>'+
+          '<button type="button" class="rmBtn" data-i="'+i+'" title="Remove preference">Remove</button>'+
+        '</td>'+
+      '</tr>'
+    );
+  }
+  tbody.innerHTML=html.join("");
+}
+
+$("choicesBody").addEventListener("click",function(e){
+  var up=e.target.closest(".moveUpBtn");
+  if(up){
+    moveChoice(parseInt(up.dataset.i,10), parseInt(up.dataset.i,10)-1);
+    return;
+  }
+  var down=e.target.closest(".moveDownBtn");
+  if(down){
+    moveChoice(parseInt(down.dataset.i,10), parseInt(down.dataset.i,10)+1);
+    return;
+  }
+  var rm=e.target.closest(".rmBtn");
+  if(rm){
+    removeChoiceAt(parseInt(rm.dataset.i,10));
+    return;
+  }
+});
+
+function renderChoicesPlus(){
+  var tbody=$("choicesPlusBody");
+  var diagTbody=$("diagTableBody");
+  var host=$("manualMatchHost");
+  if(host) host.innerHTML="";
+  $("printPlusMeta").textContent="Total Enriched Preferences: "+choices.length+" | Generated: "+new Date().toLocaleString();
+  if(!choices.length){
+    plusRowsCache=[];
+    tbody.innerHTML='<tr><td colspan="8" class="empty">No preferences selected yet. Switch to the <b>Ranking</b> tab and add choices.</td></tr>';
+    diagTbody.innerHTML='<tr><td colspan="4" class="empty">No choices available for diagnostics.</td></tr>';
+    $("diagMatchedBadge").textContent="Matched: 0";
+    if($("diagManualBadge")) $("diagManualBadge").textContent="Manual: 0";
+    if($("diagAmbiguousBadge")) $("diagAmbiguousBadge").textContent="Ambiguous: 0";
+    $("diagUnmatchedBadge").textContent="Unmatched: 0";
+    var fc=$("plusFilterCount");
+    if(fc) fc.textContent="";
+    return;
+  }
+
+  var matchedCount=0;
+  var manualCount=0;
+  var ambiguousCount=0;
+  var unmatchedCount=0;
+  var diagHtml=[];
+  diagRowsCache=[];
+  plusRowsCache=[];
+
+  for(var i=0;i<choices.length;i++){
+    var c=choices[i];
+    var prefNum=i+1;
+    var res = resolveInstituteMatch(c.institute);
+
+    var match = res ? res.item : null;
+    var rule = res ? res.rule : "No Match";
+    var status = res ? (res.status || "matched") : "unmatched";
+
+    // Uncertain auto-matches: do not apply to results table; treat as unmatched for enrichment
+    var applyToResults = false;
+    if(match && status === "manual"){
+      applyToResults = true;
+      manualCount++;
+      matchedCount++;
+    } else if(match && status === "matched"){
+      applyToResults = true;
+      matchedCount++;
+    } else if(match && status === "ambiguous"){
+      // Keep automatic algorithm output visible in diagnostics only; do not auto-assign uncertain data
+      ambiguousCount++;
+      match = null; // do not enrich stipend/bond/penalty from uncertain match
+      status = "ambiguous";
+      rule = res.rule + " (not auto-applied — confirm manually)";
+    } else {
+      unmatchedCount++;
+      status = "unmatched";
+      match = null;
+    }
+
+    var stipendVal = applyToResults && match && match.stipend ? match.stipend : "";
+    var bondVal = applyToResults && match && match.bond ? match.bond : "";
+    var penaltyVal = applyToResults && match && match.penalty ? match.penalty : "";
+
+    var statusBadge = "";
+    var actionsHtml = "";
+    var matchedName = applyToResults && match ? match.institute : (status==="ambiguous" && res && res.item ? res.item.institute : "");
+
+    var actionKey="find";
+    if(status === "manual"){
+      actionKey="clear";
+      actionsHtml =
+        '<div class="diagActionGroup">'+
+          '<div class="diagActionLabel">Clear</div>'+
+          '<button type="button" class="clearManualBtn" data-pref="'+i+'" title="Clear saved match">Clear</button>'+
+        '</div>';
+    } else if(status === "matched"){
+      actionKey="override";
+      actionsHtml =
+        '<div class="diagActionGroup">'+
+          '<div class="diagActionLabel">Override</div>'+
+          '<button type="button" class="manualMatchBtn" data-pref="'+i+'" data-mode="override" title="Override match">Override</button>'+
+        '</div>';
+    } else if(status === "ambiguous"){
+      actionKey="find";
+      actionsHtml =
+        '<div class="diagActionGroup">'+
+          '<div class="diagActionLabel">Find Match</div>'+
+          '<button type="button" class="manualMatchBtn" data-pref="'+i+'" data-mode="find" title="Find match">Find Match</button>'+
+        '</div>';
+    } else {
+      actionKey="find";
+      actionsHtml =
+        '<div class="diagActionGroup">'+
+          '<div class="diagActionLabel">Find Match</div>'+
+          '<button type="button" class="manualMatchBtn" data-pref="'+i+'" data-mode="find" title="Find match">Find Match</button>'+
+        '</div>';
+    }
+
+    diagRowsCache.push({
+      action: actionKey,
+      html: '<tr data-pref="'+i+'" data-action="'+actionKey+'" id="diag-pref-'+i+'">'+
+        '<td>'+prefNum+'</td>'+
+        '<td title="'+esc(c.institute)+'">'+esc(c.institute)+'</td>'+
+        '<td title="'+esc(matchedName)+'">'+(matchedName?esc(matchedName):'<span class="cellMuted">—</span>')+'</td>'+
+        '<td>'+actionsHtml+'</td>'+
+      '</tr>'
+    });
+
+    plusRowsCache.push({
+      prefNum: prefNum,
+      rank: c.rank,
+      quota: c.quota,
+      institute: c.institute,
+      course: c.course,
+      stipend: stipendVal,
+      bond: bondVal,
+      penalty: penaltyVal,
+      stipendNum: parseStipendAmount(stipendVal)
+    });
+  }
+  applyDiagActionFilter();
+  $("diagMatchedBadge").textContent="Matched: "+matchedCount;
+  if($("diagManualBadge")) $("diagManualBadge").textContent="Manual: "+manualCount;
+  if($("diagAmbiguousBadge")) $("diagAmbiguousBadge").textContent="Ambiguous: "+ambiguousCount;
+  $("diagUnmatchedBadge").textContent="Unmatched: "+unmatchedCount;
+
+  refreshPlusFilterOptions();
+  applyPlusTableFilters();
+
+  if(openManualPref>=0 && openManualPref<choices.length){
+    showManualCityPanel(openManualPref);
+    setBackToInstBtn(true, openManualPref);
+  } else {
+    setBackToInstBtn(false);
+  }
+}
+
+function parseStipendAmount(s){
+  if(s==null || s==="") return NaN;
+  var n=String(s).replace(/[^0-9.]/g,"");
+  if(!n) return NaN;
+  return parseFloat(n);
+}
+
+function applyDiagActionFilter(){
+  var tbody=$("diagTableBody");
+  if(!tbody) return;
+  if(!diagRowsCache.length){
+    tbody.innerHTML='<tr><td colspan="4" class="empty">No choices available for diagnostics.</td></tr>';
+    var c0=$("diagFilterCount");
+    if(c0) c0.textContent="";
+    return;
+  }
+  var filt=diagActionFilterVal||"";
+  var shown=[];
+  for(var i=0;i<diagRowsCache.length;i++){
+    if(!filt || diagRowsCache[i].action===filt) shown.push(diagRowsCache[i].html);
+  }
+  if(!shown.length){
+    tbody.innerHTML='<tr><td colspan="4" class="empty">No rows for this action filter.</td></tr>';
+  } else {
+    tbody.innerHTML=shown.join("");
+  }
+  var c1=$("diagFilterCount");
+  if(c1) c1.textContent=filt ? (shown.length+" of "+diagRowsCache.length) : (diagRowsCache.length+" rows");
+}
+
+function refreshPlusFilterOptions(){
+  var bondSel=$("plusBondFilter");
+  var penSel=$("plusPenaltyFilter");
+  if(!bondSel || !penSel) return;
+  var bonds={}, pens={};
+  for(var i=0;i<plusRowsCache.length;i++){
+    var b=plusRowsCache[i].bond;
+    var p=plusRowsCache[i].penalty;
+    if(b!=="" && b!=null) bonds[String(b)]=1;
+    if(p!=="" && p!=null) pens[String(p)]=1;
+  }
+  var bondList=Object.keys(bonds).sort(function(a,b){
+    var na=parseFloat(a), nb=parseFloat(b);
+    if(!isNaN(na) && !isNaN(nb)) return na-nb;
+    return a.localeCompare(b);
+  });
+  var penList=Object.keys(pens).sort(function(a,b){
+    var na=parseStipendAmount(a), nb=parseStipendAmount(b);
+    if(!isNaN(na) && !isNaN(nb)) return na-nb;
+    return a.localeCompare(b);
+  });
+  var curB=Array.isArray(plusBondVal)?plusBondVal.slice():(plusBondVal?[String(plusBondVal)]:[]);
+  // Drop selections that no longer exist
+  curB=curB.filter(function(v){ return bonds[String(v)]; });
+  plusBondVal=curB;
+
+  // Rebuild bond options only when the available set changed (keeps multi-select stable)
+  var nextBondKey=bondList.join("\u0001");
+  if(bondSel.getAttribute("data-opts")!==nextBondKey){
+    bondSel.setAttribute("data-opts", nextBondKey);
+    if(!bondList.length){
+      bondSel.innerHTML='<option value="" disabled>No bonds</option>';
+    } else {
+      bondSel.innerHTML=bondList.map(function(v){
+        return '<option value="'+esc(v)+'">'+esc(v)+'</option>';
+      }).join("");
+    }
+  }
+  // Always re-apply selected state so filtering stays accurate
+  for(var bi=0; bi<bondSel.options.length; bi++){
+    var opt=bondSel.options[bi];
+    opt.selected = curB.indexOf(opt.value)>=0;
+  }
+
+  var curP=plusPenaltyVal;
+  var nextPenKey=penList.join("\u0001");
+  if(penSel.getAttribute("data-opts")!==nextPenKey){
+    penSel.setAttribute("data-opts", nextPenKey);
+    penSel.innerHTML='<option value="">All penalties</option>'+penList.map(function(v){
+      return '<option value="'+esc(v)+'">'+esc(v)+'</option>';
+    }).join("");
+  }
+  penSel.value = (curP && pens[String(curP)]) ? curP : "";
+  if(penSel.value!==curP) plusPenaltyVal=penSel.value;
+
+  // restore sort/stipend controls
+  var sortEl=$("plusSortSelect");
+  if(sortEl) sortEl.value=plusSortMode||"pref";
+  var minEl=$("plusMinStipend");
+  if(minEl && document.activeElement!==minEl) minEl.value=plusMinStipendVal;
+
+  var actEl=$("diagActionFilter");
+  if(actEl && document.activeElement!==actEl) actEl.value=diagActionFilterVal||"";
+}
+
+function applyPlusTableFilters(){
+  var tbody=$("choicesPlusBody");
+  if(!tbody) return;
+  if(!plusRowsCache.length){
+    tbody.innerHTML='<tr><td colspan="8" class="empty">No preferences selected yet. Switch to the <b>Ranking</b> tab and add choices.</td></tr>';
+    var fc0=$("plusFilterCount");
+    if(fc0) fc0.textContent="";
+    return;
+  }
+  var minN=plusMinStipendVal===""?NaN:parseFloat(plusMinStipendVal);
+  var rows=plusRowsCache.filter(function(r){
+    if(!isNaN(minN)){
+      if(isNaN(r.stipendNum) || !(r.stipendNum>minN)) return false;
+    }
+    if(Array.isArray(plusBondVal) && plusBondVal.length){
+      var bondStr=String(r.bond);
+      if(plusBondVal.indexOf(bondStr)<0) return false;
+    }
+    if(plusPenaltyVal!=="" && String(r.penalty)!==plusPenaltyVal) return false;
+    return true;
+  });
+  if(plusSortMode==="rankAsc"){
+    rows=rows.slice().sort(function(a,b){
+      var na=parseFloat(a.rank), nb=parseFloat(b.rank);
+      var an=isNaN(na), bn=isNaN(nb);
+      if(an&&bn) return a.prefNum-b.prefNum;
+      if(an) return 1;
+      if(bn) return -1;
+      return na-nb || a.prefNum-b.prefNum;
+    });
+  } else if(plusSortMode==="stipendDesc"){
+    rows=rows.slice().sort(function(a,b){
+      var an=isNaN(a.stipendNum), bn=isNaN(b.stipendNum);
+      if(an&&bn) return a.prefNum-b.prefNum;
+      if(an) return 1;
+      if(bn) return -1;
+      return b.stipendNum-a.stipendNum || a.prefNum-b.prefNum;
+    });
+  }
+  // else preference order — already in cache order
+
+  if(!rows.length){
+    tbody.innerHTML='<tr><td colspan="8" class="empty">No institutes match the current Choice+ filters.</td></tr>';
+  } else {
+    var html=[];
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i];
+      html.push(
+        '<tr>'+
+          '<td class="cPref">'+r.prefNum+'</td>'+
+          '<td class="cRank" title="'+esc(r.rank)+'">'+esc(r.rank)+'</td>'+
+          '<td class="cQuota" title="'+esc(r.quota)+'">'+esc(r.quota)+'</td>'+
+          '<td class="cInst" title="'+esc(r.institute)+'">'+esc(r.institute)+'</td>'+
+          '<td class="cCourse" title="'+esc(r.course)+'">'+esc(r.course)+'</td>'+
+          '<td class="cStipend" title="'+esc(r.stipend)+'">'+(r.stipend?esc(r.stipend):'<span class="cellMuted">—</span>')+'</td>'+
+          '<td class="cBond" title="'+esc(r.bond)+'">'+(r.bond!==""&&r.bond!=null?esc(String(r.bond)):'<span class="cellMuted">—</span>')+'</td>'+
+          '<td class="cPenalty" title="'+esc(r.penalty)+'">'+(r.penalty?esc(r.penalty):'<span class="cellMuted">—</span>')+'</td>'+
+        '</tr>'
+      );
+    }
+    tbody.innerHTML=html.join("");
+  }
+  var fc=$("plusFilterCount");
+  if(fc){
+    fc.textContent = rows.length===plusRowsCache.length
+      ? (rows.length+" shown")
+      : (rows.length+" / "+plusRowsCache.length+" shown");
+  }
+}
+
+function setBackToInstBtn(show, prefIdx){
+  var btn=$("backToInstBtn");
+  if(!btn) return;
+  if(show){
+    btn.classList.add("show");
+    if(prefIdx!=null && !isNaN(prefIdx)) btn.setAttribute("data-pref", String(prefIdx));
+  } else {
+    btn.classList.remove("show");
+    btn.removeAttribute("data-pref");
+  }
+}
+
+function showManualCityPanel(prefIdx){
+  openManualPref=prefIdx;
+  var host=$("manualMatchHost");
+  if(!host) return;
+  var c=choices[prefIdx];
+  if(!c){ host.innerHTML=""; return; }
+
+  var result=getAllCsv2InSameCity(c.institute);
+  var list=result.list||[];
+  var primary=result.primaryCity;
+  var confidence=result.confidence||"none";
+  var currentManual=getManualMapping(c.institute);
+  window.__manualCityCsv2 = list;
+  window.__manualReturnPref = prefIdx;
+
+  var items=[];
+  for(var j=0;j<list.length;j++){
+    var rec=list[j];
+    var isSel = currentManual && makeManualKey(currentManual.institute)===makeManualKey(rec.institute);
+    items.push(
+      '<div class="cityItem selectable'+(isSel?' selected':'')+'" data-pref="'+prefIdx+'" data-csv2-i="'+j+'" role="button" tabindex="0">'+
+        '<div class="cityItemName">'+esc(rec.institute)+
+          '<div class="cityItemMeta">'+(rec.stipend?esc(rec.stipend):'—')+
+            (rec.bond!==undefined&&rec.bond!==""?(' · Bond '+esc(String(rec.bond))):'')+
+            (rec.penalty?(' · '+esc(rec.penalty)):'')+
+          '</div>'+
+        '</div>'+
+      '</div>'
+    );
+  }
+  if(!items.length){
+    items.push('<div class="noCityMsg">'+(confidence==="none" || !primary
+      ? 'City not identified for this institute. No list available.'
+      : 'No institutes found for this city.')+'</div>');
+  }
+
+  var title = primary ? ('Institutes in '+primary) : 'Institutes';
+  host.innerHTML=
+    '<div class="cityMatchPanel" data-pref="'+prefIdx+'">'+
+      '<h4>'+esc(title)+'</h4>'+
+      '<div class="cityList cityListFull" id="csv2CityList">'+items.join("")+'</div>'+
+    '</div>';
+}
+
+// Manual match UI events
+document.addEventListener("click", function(e){
+  var findBtn=e.target.closest(".manualMatchBtn");
+  if(findBtn){
+    var pref=parseInt(findBtn.getAttribute("data-pref"),10);
+    if(!isNaN(pref)){
+      if(openManualPref===pref){
+        openManualPref=-1;
+        var host=$("manualMatchHost");
+        if(host) host.innerHTML="";
+        setBackToInstBtn(false);
+      } else {
+        showManualCityPanel(pref);
+        setBackToInstBtn(true, pref);
+        var panel=$("manualMatchHost");
+        if(panel) panel.scrollIntoView({behavior:"smooth",block:"nearest"});
+      }
+    }
+    return;
+  }
+  var backBtn=e.target.closest("#backToInstBtn");
+  if(backBtn){
+    var bp=parseInt(backBtn.getAttribute("data-pref"),10);
+    if(isNaN(bp)) bp=openManualPref;
+    var row=document.getElementById("diag-pref-"+bp);
+    if(row){
+      row.scrollIntoView({behavior:"smooth",block:"center"});
+      row.style.outline="2px solid var(--accent)";
+      setTimeout(function(){ row.style.outline=""; }, 1600);
+    }
+    return;
+  }
+  var clearBtn=e.target.closest(".clearManualBtn");
+  if(clearBtn){
+    var prefC=parseInt(clearBtn.getAttribute("data-pref"),10);
+    if(!isNaN(prefC) && choices[prefC]){
+      setManualMapping(choices[prefC].institute, null);
+      openManualPref=-1;
+      setBackToInstBtn(false);
+      renderChoicesPlus();
+    }
+    return;
+  }
+  var pick=e.target.closest(".pickBtn, .cityItem.selectable");
+  if(pick){
+    var prefP=parseInt(pick.getAttribute("data-pref"),10);
+    var csv2i=parseInt(pick.getAttribute("data-csv2-i"),10);
+    // allow click on child inside cityItem
+    if(isNaN(prefP) || isNaN(csv2i)){
+      var row=e.target.closest(".cityItem.selectable");
+      if(row){
+        prefP=parseInt(row.getAttribute("data-pref"),10);
+        csv2i=parseInt(row.getAttribute("data-csv2-i"),10);
+      }
+    }
+    if(!isNaN(prefP) && choices[prefP] && window.__manualCityCsv2 && window.__manualCityCsv2[csv2i]){
+      var chosen=window.__manualCityCsv2[csv2i];
+      var returnPref = (window.__manualReturnPref!=null)?window.__manualReturnPref:prefP;
+      setManualMapping(choices[prefP].institute, chosen.institute);
+      openManualPref=-1;
+      setBackToInstBtn(false);
+      renderChoicesPlus();
+      setTimeout(function(){
+        var row=document.getElementById("diag-pref-"+returnPref);
+        if(row){
+          row.scrollIntoView({behavior:"smooth",block:"center"});
+          row.style.outline="2px solid var(--accent)";
+          setTimeout(function(){ if(row) row.style.outline=""; }, 1600);
+        }
+      }, 50);
+    }
+    return;
+  }
+});
+
+function csvCell(val){
+  var s=String(val==null?"":val);
+  if(/[",\r\n]/.test(s)) return '"'+s.replace(/"/g,'""')+'"';
+  return s;
+}
+
+function exportChoicesCSV(){
+  if(!choices.length) return;
+  var lines=[["Preference",headers[0],headers[1],headers[2],headers[3]].map(csvCell).join(",")];
+  for(var i=0;i<choices.length;i++){
+    var c=choices[i];
+    lines.push([i+1, c.rank, c.quota, c.institute, c.course].map(csvCell).join(","));
+  }
+  var blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;
+  a.download="neet_pg_preferences.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+
+function exportPlusCSV(){
+  if(!choices.length) return;
+  var lines=[["Preference",headers[0],headers[1],headers[2],headers[3],"Stipend","Bond","Penalty"].map(csvCell).join(",")];
+  for(var i=0;i<choices.length;i++){
+    var c=choices[i];
+    var res=resolveInstituteMatch(c.institute);
+    var match=null;
+    if(res && (res.status==="matched" || res.status==="manual") && res.item) match=res.item;
+    lines.push([
+      i+1,
+      c.rank,
+      c.quota,
+      c.institute,
+      c.course,
+      match&&match.stipend?match.stipend:"",
+      match&&match.bond?match.bond:"",
+      match&&match.penalty?match.penalty:""
+    ].map(csvCell).join(","));
+  }
+  var blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/csv;charset=utf-8;"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url;
+  a.download="neet_pg_choices_plus.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+}
+
+$("exportCsvBtn").addEventListener("click",exportChoicesCSV);
+$("printChoicesBtn").addEventListener("click",function(){window.print();});
+$("clearChoicesBtn").addEventListener("click",clearAllChoices);
+
+$("exportPlusCsvBtn").addEventListener("click",exportPlusCSV);
+$("printPlusBtn").addEventListener("click",function(){window.print();});
+
+$("upload1Btn").addEventListener("click",function(){$("file1Input").click();});
+$("upload2Btn").addEventListener("click",function(){$("file2Input").click();});
+$("pick").addEventListener("click",function(){$("file1Input").click();});
+
+$("file1Input").addEventListener("change",function(e){
+  loadFile1(e.target.files[0]);
+  e.target.value="";
+});
+
+$("file2Input").addEventListener("change",function(e){
+  loadFile2(e.target.files[0]);
+  e.target.value="";
+});
+
+var menu=$("menu"), mq=$("mq"), mlist=$("mlist"), mspacer=$("mspacer");
+var mCol=-1, mVals=[], mShown=[], MH=28;
+function updateDD(){
+  var b=filtersEl.querySelectorAll(".dd");
+  for(var i=0;i<b.length;i++){
+    var colIdx=parseInt(b[i].dataset.i,10);
+    b[i].classList.toggle("active",!!sel[colIdx]);
+  }
+}
+function checked(v){return sel[mCol]===null||sel[mCol].has(v);}
+function openMenu(c,anchor){
+  if(menu.classList.contains("open")&&mCol===c){closeMenu();return;}
+  mCol=c;
+  var x=ctx(),st=new Set();
+  for(var i=0;i<data.length;i++){ if(passes(i,c,x.cf)) st.add(data[i][c]); }
+  if(sel[c]) sel[c].forEach(function(v){st.add(v);});
+  mVals=uniq[c].filter(function(v){return st.has(v);});
+  mq.value="";filterMenu();
+  menu.classList.add("open");
+  var r=anchor.getBoundingClientRect(), w=menu.offsetWidth, h=menu.offsetHeight;
+  menu.style.left=Math.max(4,Math.min(r.right-w,innerWidth-w-4))+"px";
+  menu.style.top=Math.max(4,Math.min(r.bottom+4,innerHeight-h-4))+"px";
+  mlist.scrollTop=0;renderMenu();mq.focus();
+}
+function closeMenu(){menu.classList.remove("open");mCol=-1;}
+function filterMenu(){
+  var q=mq.value.trim().toLowerCase();
+  mShown=q?mVals.filter(function(v){return v.toLowerCase().indexOf(q)>=0;}):mVals;
+  mspacer.style.height=(mShown.length*MH)+"px";
+  mlist.scrollTop=0;
+}
+function label(v){return v===""?"(Blank)":v;}
+function renderMenu(){
+  if(mCol<0)return;
+  var top=mlist.scrollTop,first=Math.max(0,Math.floor(top/MH)-3),last=Math.min(mShown.length,first+Math.ceil(mlist.clientHeight/MH)+7),h=[];
+  for(var i=first;i<last;i++){
+    var v=mShown[i];
+    h.push('<label class="mitem" style="top:'+(i*MH)+'px" data-i="'+i+'"><input type="checkbox"'+(checked(v)?' checked':'')+'><span title="'+esc(label(v))+'">'+esc(label(v))+'</span></label>');
+  }
+  mspacer.innerHTML=h.join("");
+  var all=mShown.length>0&&mShown.every(checked);
+  $("mallcb").checked=all;
+  $("malltxt").textContent=mq.value.trim()?"(Select all search results)":"(Select all)";
+  var n=sel[mCol]===null?uniq[mCol].length:sel[mCol].size;
+  $("mcount").textContent=n.toLocaleString()+" of "+uniq[mCol].length.toLocaleString()+" selected";
+}
+function setSel(c,set){ sel[c]=(set.size>=uniq[c].length)?null:set; applyAll(); renderMenu(); }
+function baseSet(c){return sel[c]===null?new Set(uniq[c]):new Set(sel[c]);}
+mlist.addEventListener("scroll",renderMenu);
+mq.addEventListener("input",function(){filterMenu();renderMenu();});
+mspacer.addEventListener("change",function(e){
+  var it=e.target.closest(".mitem");if(!it)return;
+  var v=mShown[+it.dataset.i],s=baseSet(mCol);
+  if(e.target.checked)s.add(v);else s.delete(v);
+  setSel(mCol,s);
+});
+$("mall").addEventListener("click",function(e){
+  e.preventDefault();
+  var all=mShown.length>0&&mShown.every(checked),q=mq.value.trim(),s;
+  if(q&&!(all&&sel[mCol]!==null)){ s=new Set(mShown); }
+  else { s=baseSet(mCol); mShown.forEach(function(v){if(all)s.delete(v);else s.add(v);}); }
+  setSel(mCol,s);
+});
+$("mclear").addEventListener("click",function(){ if(mCol<0)return; sel[mCol]=null;applyAll();renderMenu(); });
+document.addEventListener("mousedown",function(e){ if(menu.classList.contains("open")&&!menu.contains(e.target)&&!e.target.classList.contains("dd"))closeMenu(); });
+document.addEventListener("keydown",function(e){ if(e.key==="Escape")closeMenu(); });
+wrap.addEventListener("scroll",closeMenu);
+
+function clearAll(){
+  colFilters=["","","",""];
+  var ins=filtersEl.querySelectorAll("input[type=search]");
+  for(var i=0;i<ins.length;i++)ins[i].value="";
+  sel=[null,null,null,null];closeMenu();updateDD();
+  sortCol=-1;sortDir=0;updateArrows();applyAll();
+}
+
+["dragover","drop"].forEach(function(ev){document.addEventListener(ev,function(e){
+  if(activeTab!=="ranking") return;
+  e.preventDefault();
+  if(ev==="drop"&&e.dataTransfer&&e.dataTransfer.files.length)loadFile1(e.dataTransfer.files[0]);
+});});
+
+// Choice+ sort & filter controls
+(function bindPlusFilters(){
+  var sortEl=$("plusSortSelect");
+  var minEl=$("plusMinStipend");
+  var bondEl=$("plusBondFilter");
+  var penEl=$("plusPenaltyFilter");
+  if(sortEl){
+    sortEl.addEventListener("change", function(){
+      plusSortMode=sortEl.value||"pref";
+      applyPlusTableFilters();
+    });
+  }
+  if(minEl){
+    minEl.addEventListener("input", function(){
+      plusMinStipendVal=minEl.value.trim();
+      applyPlusTableFilters();
+    });
+  }
+  if(bondEl){
+    function readBondSelection(){
+      var selected=[];
+      for(var i=0;i<bondEl.options.length;i++){
+        if(bondEl.options[i].selected && bondEl.options[i].value!=="") selected.push(String(bondEl.options[i].value));
+      }
+      plusBondVal=selected;
+      applyPlusTableFilters();
+    }
+    bondEl.addEventListener("change", readBondSelection);
+    bondEl.addEventListener("input", readBondSelection);
+  }
+  if(penEl){
+    penEl.addEventListener("change", function(){
+      plusPenaltyVal=penEl.value;
+      applyPlusTableFilters();
+    });
+  }
+  var actEl=$("diagActionFilter");
+  if(actEl){
+    actEl.addEventListener("change", function(){
+      diagActionFilterVal=actEl.value||"";
+      applyDiagActionFilter();
+    });
+  }
+})();
+
+loadChoices();
+loadManualMaps();
+buildHeader();
+syncUI();
+autoLoad();
+})();
+</script>
+</body>
+</html>
